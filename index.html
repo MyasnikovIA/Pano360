@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css"/>
+    <script type="text/javascript" src="lib/Pannellum2_5_6/pannellum.js"></script>
+    <script type="text/javascript" src="lib/Pannellum2_5_6/libpannellum.js"></script>
+    <script src="lib/OpenStreetMap/OpenLayers-1.0.0/OpenLayers.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="lib/OpenStreetMap/OpenLayers-1.0.0/style.css">
+    <script src="lib/OpenStreetMap/OpenLayers-1.0.0/osm.js"></script>
+    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+    <script src="lib/System/main.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="canvas">
+</div>
+
+
+<div id="w_map" class="easyui-window" title="Map" data-options="modal:false,closed:true,resizable:false" style="width:35%;height:80%;padding:5px;left:40px;top:30px">
+  <div onload="init();" id="basicMap"></div>
+</div>
+
+
+</body>
+<cmpAction name="getAction" query_type="java">
+  <![CDATA[
+     
+  ]]>
+</cmpAction>
+<script>
+  var sceneSelectPoint={};
+  var selectPoint={};
+  var sceneMain={};
+  var scene_osm=null;
+  var scene_osm_point=null;
+
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+}
+
+  var sceneSelectPoint={};
+  onClickHotSpot = function(hs) {
+      const jsonName = hs['panorama_url'].split('/')[4];
+      const name = jsonName.split('.')[0];
+      const nameJson = name+'.json';
+      const nameJpg = name+'.jpg';
+
+      let currentUrl = new URL(window.location.href);
+      if (!currentUrl.searchParams.get('info')) {
+          currentUrl.searchParams.append('info', hs.panorama_url.split('/')[4]);
+      } else {
+          currentUrl.searchParams.set('info', hs.panorama_url.split('/')[4]);
+      }
+      window.history.pushState({}, '', currentUrl);
+
+      let jsonObj = getJsonUrlData(hs['panorama_url']);
+      jsonObj.onClickHotSpot = onClickHotSpot;
+      jsonObj.onGetMapWindow = onGetMapWindow;
+      jsonObj['pitch']=hs['point_pitch'];
+      jsonObj['yaw']=hs['point_yaw'];
+      if ((sceneMain) && (typeof sceneMain['destroy'] !== 'undefined')) {
+          sceneMain.destroy();
+      }
+      sceneMain = pannellum.viewer('canvas', jsonObj);
+      let latLon = {};
+      latLon['lat']=jsonObj['scenes']['scene1']['lat'];
+      latLon['lon']=jsonObj['scenes']['scene1']['lon'];
+      setPointMap(jsonObj);
+      return true;
+  };
+
+  onGetMapWindow = function() {
+      $('#w_map').window('open');
+  };
+
+setPointMap = function(data) {
+     if (scene_osm == null) {
+          scene_osm = osm.viewer('w_map');
+     }
+     var lonLat={};
+     if (data) {
+         lonLat['lat']=data['scenes']['scene1']['lat'];
+         lonLat['lon']=data['scenes']['scene1']['lon'];
+     } else {
+         lonLat['lon'] = 98.29704566996978;
+         lonLat['lat'] = 7.8278988917053285;
+     }
+     //scene_osm.addMarker('test', 98.29704566996978, 7.8278988917053285, data);
+     //scene_osm.setCenter(98.29704566996978,7.8278988917053285);
+     scene_osm.addMarker('test', lonLat.lon, lonLat.lat,data);
+     scene_osm.setCenter(lonLat.lon, lonLat.lat);
+     scene_osm.onClickMarker(function(marker) {
+         console.log(marker)
+     });
+     var indMarker = 0;
+     scene_osm.onClickMap(function(lonLat) {
+         //indMarker+=1;
+         // scene_osm.addMarker('test_'+indMarker, lonLat.lon, lonLat.lat,{'TEst':1111});
+         //console.log(lonLat)
+     });
+}
+
+setSelectPanorama = function(hotSpot) {
+    let params = new URLSearchParams(document.location.search);
+    let infoValue = params.get('info');
+    let photoValue = params.get('photo');
+
+    let canvas = document.getElementById('canvas');
+    canvas.style.width = (window.innerWidth)-10 + 'px';
+    canvas.style.height = (window.innerHeight)-10 + 'px';
+
+    // Если есть параметр photo, загружаем напрямую указанное изображение
+    if (photoValue) {
+        let jsonObj = {
+            "hotSpotDebug": false,
+            "hotPointDebug": true,
+            "sceneFadeDuration": 1000,
+            "default": {
+                "firstScene": "scene1"
+            },
+            "scenes": {
+                "scene1": {
+                    "title": "Direct Photo",
+                    "panorama": photoValue,
+                    "crossOrigin": "use-credentials",
+                    "autoLoad": true,
+                    "yaw": 0,
+                    "pitch": 0,
+                    "hotSpots": []
+                }
+            }
+        };
+        jsonObj.onClickHotSpot = onClickHotSpot;
+        jsonObj.onGetMapWindow = onGetMapWindow;
+        if (hotSpot) {
+            if (hotSpot['point_pitch']) jsonObj['scenes']['scene1']['pitch'] = hotSpot['point_pitch'];
+            if (hotSpot['point_yaw']) jsonObj['scenes']['scene1']['yaw'] = hotSpot['point_yaw'];
+        }
+        sceneMain = pannellum.viewer('canvas', jsonObj);
+        setPointMap(jsonObj);
+    }
+    // Если есть параметр info, загружаем через JSON конфигурацию
+    else if (infoValue) {
+        let jsonObj = getJsonUrlData('/Example/pano360/point_info/'+infoValue);
+        jsonObj.onClickHotSpot = onClickHotSpot;
+        jsonObj.onGetMapWindow = onGetMapWindow;
+        if (hotSpot) {
+            if (hotSpot['point_pitch']) jsonObj['scenes']['scene1']['pitch'] = hotSpot['point_pitch'];
+            if (hotSpot['point_yaw']) jsonObj['scenes']['scene1']['yaw'] = hotSpot['point_yaw'];
+        }
+        setPointMap(jsonObj);
+        sceneMain = pannellum.viewer('canvas', jsonObj);
+    }
+    // Если нет параметров, загружаем изображение по умолчанию
+    else {
+        let jsonObj = {
+            "hotSpotDebug": false,
+            "hotPointDebug": true,
+            "sceneFadeDuration": 1000,
+            "default": {
+                "firstScene": "scene1"
+            },
+            "scenes": {
+                "scene1": {
+                    "title": "pic_20240606_105619",
+                    "panorama": "img/DSCN0028.jpg",
+                    "crossOrigin": "use-credentials",
+                    "autoLoad": true,
+                    // Направление взгляда yaw  pitch
+                    "yaw": -6.7703862452244294,  // Ось X  от -180 до +180
+                    "pitch": -24.413348927017115,  // Ось Y  от -90 до +90
+                    "hotSpots": []
+                }
+            }
+        };
+        jsonObj.onClickHotSpot = onClickHotSpot;
+        jsonObj.onGetMapWindow = onGetMapWindow;
+        if (hotSpot) {
+            if (hotSpot['point_pitch']) jsonObj['scenes']['scene1']['pitch'] = hotSpot['point_pitch'];
+            if (hotSpot['point_yaw']) jsonObj['scenes']['scene1']['yaw'] = hotSpot['point_yaw'];
+        }
+        sceneMain = pannellum.viewer('canvas', jsonObj);
+        setPointMap(jsonObj);
+    }
+}
+setSelectPanorama();
+
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+        orientation_roll = 0;
+        orientation_azimuth = 0;
+        pitchOld = 0
+        yawOld = 0
+        oldX = 0;
+        oldY = 0;
+        function changePitch(value) {
+            var x = value*(-1);
+            x = x-45;
+            if (oldX==0) {
+                oldX = sceneMain.getPitch();
+            }
+            x = x+oldX;
+            sceneMain.setPitch(x,100);
+        }
+        function changeAzimuth(value) {
+            console.log("changeAzimuth--"+value)
+            var y = value;
+            y = y-180;
+            if (oldY==0) {
+                oldY = sceneMain.getYaw();
+            }
+            sceneMain.setYaw(y, 100);
+        }
+        function defineProperty(propertyName, defaultValue, callback) {
+            Object.defineProperty(window, propertyName, {
+                get() {
+                    return defaultValue
+                },
+                set(v) {
+                    if (callback) callback(v);
+                    defaultValue = v;
+                }
+            });
+        };
+        defineProperty('orientation_azimuth', {}, changeAzimuth)
+        defineProperty('orientation_roll', {}, changePitch)
+
+</script>
+
+</html>
