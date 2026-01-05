@@ -1,0 +1,76 @@
+{
+  "panoramas": [
+    {
+      "id": "scene1",
+      "title": "Панорама 1",
+      "panorama": "img/DSCN0033.jpg",
+      "thumbnail": "img/thumbnails/DSCN0033_thumb.jpg",
+      "yaw": -6.7703862452244294,
+      "pitch": -24.413348927017115,
+      "description": "Описание первой панорамы"
+    },
+    {
+      "id": "scene2",
+      "title": "Панорама 2",
+      "panorama": "img/DSCN0028.jpg",
+      "thumbnail": "img/thumbnails/DSCN0028_thumb.jpg",
+      "yaw": 10.5,
+      "pitch": -15.2,
+      "description": "Описание второй панорамы"
+    },
+    {
+      "id": "scene3",
+      "title": "Панорама 3",
+      "panorama": "img/DSCN0041.jpg",
+      "thumbnail": "img/thumbnails/DSCN0041_thumb.jpg",
+      "yaw": 45.3,
+      "pitch": -8.7,
+      "description": "Описание третьей панорамы"
+    },
+    {
+      "id": "scene4",
+      "title": "Панорама 4",
+      "panorama": "img/DSCN0055.jpg",
+      "thumbnail": "img/thumbnails/DSCN0055_thumb.jpg",
+      "yaw": -30.1,
+      "pitch": -12.4,
+      "description": "Описание четвертой панорамы"
+    },
+    {
+      "id": "scene5",
+      "title": "Панорама 5",
+      "panorama": "img/DSCN0067.jpg",
+      "thumbnail": "img/thumbnails/DSCN0067_thumb.jpg",
+      "yaw": 90.8,
+      "pitch": -20.9,
+      "description": "Описание пятой панорамы"
+    },
+    {
+      "id": "scene6",
+      "title": "Панорама 6",
+      "panorama": "img/DSCN0078.jpg",
+      "thumbnail": "img/thumbnails/DSCN0078_thumb.jpg",
+      "yaw": -120.5,
+      "pitch": -5.3,
+      "description": "Описание шестой панорамы"
+    },
+    {
+      "id": "scene7",
+      "title": "Панорама 7",
+      "panorama": "img/DSCN0089.jpg",
+      "thumbnail": "img/thumbnails/DSCN0089_thumb.jpg",
+      "yaw": 15.2,
+      "pitch": -25.8,
+      "description": "Описание седьмой панорамы"
+    },
+    {
+      "id": "scene8",
+      "title": "Панорама 8",
+      "panorama": "img/DSCN0092.jpg",
+      "thumbnail": "img/thumbnails/DSCN0092_thumb.jpg",
+      "yaw": -60.7,
+      "pitch": -18.1,
+      "description": "Описание восьмой панорамы"
+    }
+  ]
+}
