@@ -2,195 +2,699 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Panorama Viewer</title>
+    <!-- EasyUI CSS -->
+    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/icon.css">
+    <!-- Pannellum CSS -->
     <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css"/>
+    
+    <!-- jQuery and EasyUI JS -->
+    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.easyui.min.js"></script>
+    <!-- Pannellum JS -->
     <script type="text/javascript" src="lib/Pannellum2_5_6/pannellum.js"></script>
     <script type="text/javascript" src="lib/Pannellum2_5_6/libpannellum.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #main-layout {
+            width: 100%;
+            height: 100vh;
+        }
+        #west-panel {
+            padding: 10px;
+            overflow: hidden;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .control-group {
+            margin: 15px 0;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .btn-group {
+            margin-top: 20px;
+        }
+        .btn-group button {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        #file-list-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            background: #f9f9f9;
+        }
+        .file-item {
+            padding: 5px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .file-item:hover {
+            background: #e6f2ff;
+        }
+        .file-item.folder {
+            font-weight: bold;
+            color: #0066cc;
+        }
+        .file-item.image {
+            color: #333;
+        }
+        .file-item.current {
+            background: #d9edf7;
+            border-left: 3px solid #31708f;
+        }
+        .breadcrumb {
+            padding: 5px 10px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            font-size: 12px;
+        }
+        .breadcrumb a {
+            color: #0066cc;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        .file-actions {
+            padding: 5px 10px;
+            background: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+        }
+        #file-search {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 3px;
+        }
+        #file-list {
+            height: 300px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+    </style>
 </head>
 <body>
-<div id="canvas">
-</div>
+    <div id="main-layout" class="easyui-layout">
+    <!-- Западная панель (30%) для управления -->
+    <div id="west-panel" data-options="region:'west',title:'Controls',split:true" style="width:30%;">
+    
+		<!-- Верхняя панель с основными контролами -->
+		<div style="height:20%; overflow-y:auto; padding-right:10px;" data-options="split:true" >
+			<div class="control-group">
+				<label>Scene Navigation:</label>
+				<div id="scene-list">
+					<p>Loading scenes...</p>
+				</div>
+			</div>
+			
+			<div class="control-group">
+				<label>View Controls:</label>
+				<div>
+					<button class="easyui-linkbutton" onclick="zoomIn()">Zoom In</button>
+					<button class="easyui-linkbutton" onclick="zoomOut()">Zoom Out</button>
+					<button class="easyui-linkbutton" onclick="resetView()">Reset View</button>
+				</div>
+			</div>
+			
+			<div class="control-group">
+				<label>Map Window:</label>
+				<div>
+					<button class="easyui-linkbutton" onclick="toggleMap()">Toggle Map</button>
+				</div>
+			</div>
+			
+			<div class="control-group">
+				<label>Debug Info:</label>
+				<div>
+					<p id="pitch-info">Pitch: 0°</p>
+					<p id="yaw-info">Yaw: 0°</p>
+					<p id="hfov-info">HFOV: 100°</p>
+				</div>
+			</div>
+			
+			<div class="btn-group">
+				<button class="easyui-linkbutton" onclick="fullscreen()">Fullscreen</button>
+				<button class="easyui-linkbutton" onclick="refreshViewer()">Refresh</button>
+			</div>
+		</div>
+		
+		<!-- Split разделитель -->
+		<div style="height:5px; background:#e0e0e0; cursor:ns-resize;" id="controls-splitter"></div>
+		
+		<!-- Нижняя панель с файловым браузером -->
+		<div style="height:70%; overflow:hidden; display:flex; flex-direction:column;">
+			<!-- Панель списка файлов с возможностью изменения размера -->
+			<div class="control-group" style="flex:1; display:flex; flex-direction:column; margin-top:0;">
+				<div id="file-list-container" style="flex:1; display:flex; flex-direction:column; border: 1px solid #ddd; border-radius: 3px;">
+					<div style="background: #f0f0f0; padding: 5px 10px; border-bottom: 1px solid #ddd; flex-shrink:0;">
+						<label style="margin: 0; display: inline-block;">File Browser</label>
+						<div style="float: right;">
+							<button class="easyui-linkbutton" onclick="loadFileList()" 
+									style="padding: 2px 8px; font-size: 11px;">Refresh</button>
+						</div>
+					</div>
+					
+					<div class="file-actions" style="flex-shrink:0;">
+						<input id="file-search" type="text" placeholder="Search files..." 
+							   onkeyup="filterFiles()" style="width:100%; box-sizing:border-box;">
+					</div>
+					
+					<div class="breadcrumb" id="breadcrumb" style="flex-shrink:0;">
+						<a onclick="navigateToFolder('')">Home</a>
+					</div>
+					
+					<div id="file-list" style="flex:1; overflow-y:auto; min-height:0;">
+						<p style="padding: 10px; text-align: center; color: #999;">
+							Loading files...
+						</p>
+					</div>
+					
+					<!-- Панель изменения размера -->
+					<div style="height: 10px; background: #e0e0e0; cursor: ns-resize; text-align: center; 
+								border-top: 1px solid #ddd; flex-shrink:0;" id="file-list-resize">
+						<span style="color: #999; font-size: 10px;">≡</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>   
+        <!-- Центральная панель (70%) для панорамы -->
+        <div data-options="region:'center',title:'Panorama Viewer',noheader:true,split:true" style="padding:0;">
+            <div id="canvas-container">
+                <div id="canvas"></div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Окно карты (изначально скрытое) -->
+    <div id="w_map" class="easyui-window" title="Map" 
+         data-options="modal:false,closed:true,resizable:false" 
+         style="width:500px;height:400px;padding:5px;">
+        <div id="basicMap">Map content here</div>
+    </div>
 
-<div id="w_map" class="easyui-window" title="Map" data-options="modal:false,closed:true,resizable:false" style="width:35%;height:80%;padding:5px;left:40px;top:30px">
-  <div onload="init();" id="basicMap"></div>
-</div>
+    <script>
+        // Глобальные переменные
+        var sceneMain = null;
+        var scenesData = {};
+        var currentScene = null;
+        var currentFolder = '';
+        var allFiles = [];
+        var fileListResizing = false;
+        var baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
 
-
-</body>
-<cmpAction name="getAction" query_type="java">
-  <![CDATA[
-     
-  ]]>
-</cmpAction>
-<script>
-  var sceneSelectPoint={};
-  var selectPoint={};
-  var sceneMain={};
-  var scene_osm=null;
-  var scene_osm_point=null;
-
-
-function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
-}
-
-  var sceneSelectPoint={};
-  onClickHotSpot = function(hs) {
-      const jsonName = hs['panorama_url'].split('/')[4];
-      const name = jsonName.split('.')[0];
-      const nameJson = name+'.json';
-      const nameJpg = name+'.jpg';
-
-      let currentUrl = new URL(window.location.href);
-      if (!currentUrl.searchParams.get('info')) {
-          currentUrl.searchParams.append('info', hs.panorama_url.split('/')[4]);
-      } else {
-          currentUrl.searchParams.set('info', hs.panorama_url.split('/')[4]);
-      }
-      window.history.pushState({}, '', currentUrl);
-
-      let jsonObj = getJsonUrlData(hs['panorama_url']);
-      jsonObj.onClickHotSpot = onClickHotSpot;
-      jsonObj.onGetMapWindow = onGetMapWindow;
-      jsonObj['pitch']=hs['point_pitch'];
-      jsonObj['yaw']=hs['point_yaw'];
-      if ((sceneMain) && (typeof sceneMain['destroy'] !== 'undefined')) {
-          sceneMain.destroy();
-      }
-      sceneMain = pannellum.viewer('canvas', jsonObj);
-      let latLon = {};
-      latLon['lat']=jsonObj['scenes']['scene1']['lat'];
-      latLon['lon']=jsonObj['scenes']['scene1']['lon'];
-      return true;
-  };
-
-  onGetMapWindow = function() {
-      $('#w_map').window('open');
-  };
-
-setSelectPanorama = function(hotSpot) {
-    let params = new URLSearchParams(document.location.search);
-    let infoValue = params.get('info');
-    let photoValue = params.get('photo');
-
-    let canvas = document.getElementById('canvas');
-    canvas.style.width = (window.innerWidth)-10 + 'px';
-    canvas.style.height = (window.innerHeight)-10 + 'px';
-
-    // Если есть параметр photo, загружаем напрямую указанное изображение
-    if (photoValue) {
-        let jsonObj = {
-            "hotSpotDebug": false,
-            "hotPointDebug": true,
-            "sceneFadeDuration": 1000,
-            "default": {
-                "firstScene": "scene1"
-            },
-            "scenes": {
-                "scene1": {
-                    "title": "Direct Photo",
-                    "panorama": photoValue,
-                    "crossOrigin": "use-credentials",
-                    "autoLoad": true,
-                    "yaw": 0,
-                    "pitch": 0,
-                    "hotSpots": []
+        // Инициализация при загрузке страницы
+        $(document).ready(function() {
+            // Инициализация layout
+            $('#main-layout').layout();
+            
+            // Загрузка начальной сцены
+            loadInitialScene();
+            
+            // Загрузка списка файлов
+            loadFileList();
+            
+            // Инициализация перетаскивания для изменения размера панели файлов
+            initFileListResize();
+            
+            // Обновление layout при изменении размера окна
+            $(window).resize(function() {
+                $('#main-layout').layout('resize');
+                if (sceneMain) {
+                    sceneMain.resize();
                 }
+            });
+        });
+
+        function initFileListResize() {
+            var resizeHandle = document.getElementById('file-list-resize');
+            var fileList = document.getElementById('file-list');
+            var startY, startHeight;
+            
+            resizeHandle.addEventListener('mousedown', initResize, false);
+            
+            function initResize(e) {
+                startY = e.clientY;
+                startHeight = parseInt(document.defaultView.getComputedStyle(fileList).height, 10);
+                fileListResizing = true;
+                
+                document.documentElement.addEventListener('mousemove', doResize, false);
+                document.documentElement.addEventListener('mouseup', stopResize, false);
             }
-        };
-        jsonObj.onClickHotSpot = onClickHotSpot;
-        jsonObj.onGetMapWindow = onGetMapWindow;
-        if (hotSpot) {
-            if (hotSpot['point_pitch']) jsonObj['scenes']['scene1']['pitch'] = hotSpot['point_pitch'];
-            if (hotSpot['point_yaw']) jsonObj['scenes']['scene1']['yaw'] = hotSpot['point_yaw'];
+            
+            function doResize(e) {
+                if (!fileListResizing) return;
+                
+                var deltaY = e.clientY - startY;
+                var newHeight = startHeight + deltaY;
+                
+                // Ограничиваем минимальную и максимальную высоту
+                if (newHeight < 100) newHeight = 100;
+                if (newHeight > 500) newHeight = 500;
+                
+                fileList.style.height = newHeight + 'px';
+            }
+            
+            function stopResize() {
+                fileListResizing = false;
+                document.documentElement.removeEventListener('mousemove', doResize, false);
+                document.documentElement.removeEventListener('mouseup', stopResize, false);
+            }
         }
-        sceneMain = pannellum.viewer('canvas', jsonObj);
-    }
-    // Если есть параметр info, загружаем через JSON конфигурацию
-    else if (infoValue) {
-        let jsonObj = getJsonUrlData('/Example/pano360/point_info/'+infoValue);
-        jsonObj.onClickHotSpot = onClickHotSpot;
-        jsonObj.onGetMapWindow = onGetMapWindow;
-        if (hotSpot) {
-            if (hotSpot['point_pitch']) jsonObj['scenes']['scene1']['pitch'] = hotSpot['point_pitch'];
-            if (hotSpot['point_yaw']) jsonObj['scenes']['scene1']['yaw'] = hotSpot['point_yaw'];
-        }
-        sceneMain = pannellum.viewer('canvas', jsonObj);
-    }
-    // Если нет параметров, загружаем изображение по умолчанию
-    else {
-        let jsonObj = {
-            "hotSpotDebug": false,
-            "hotPointDebug": true,
-            "sceneFadeDuration": 1000,
-            "default": {
-                "firstScene": "scene1"
-            },
-            "scenes": {
-                "scene1": {
-                    "title": "pic_20240606_105619",
-                    "panorama": "img/DSCN0129.JPG",
-                    "crossOrigin": "use-credentials",
-                    "autoLoad": true,
-                    // Направление взгляда yaw  pitch
-                    "yaw": -6.7703862452244294,  // Ось X  от -180 до +180
-                    "pitch": -24.413348927017115,  // Ось Y  от -90 до +90
-                    "hotSpots": []
+
+        function loadInitialScene() {
+            scenesData = {
+                'default': {
+                    name: 'Default Scene',
+                    config: {
+                        "default": {
+                            "firstScene": "scene1"
+                        },
+                        "scenes": {
+                            "scene1": {
+                                "title": "Default Panorama",
+                                // Физический путь в файловой системе: img/DSCN0129.JPG
+                                // Веб-путь: DSCN0129.JPG (без img/)
+                                "panorama": "DSCN0129.JPG",
+                                "crossOrigin": "use-credentials",
+                                "autoLoad": true,
+                                "yaw": -6.77,
+                                "pitch": -24.41,
+                                "hotSpots": []
+                            }
+                        }
+                    }
                 }
-            }
-        };
-        jsonObj.onClickHotSpot = onClickHotSpot;
-        jsonObj.onGetMapWindow = onGetMapWindow;
-        if (hotSpot) {
-            if (hotSpot['point_pitch']) jsonObj['scenes']['scene1']['pitch'] = hotSpot['point_pitch'];
-            if (hotSpot['point_yaw']) jsonObj['scenes']['scene1']['yaw'] = hotSpot['point_yaw'];
+            };
+            
+            setSelectPanorama();
+            updateSceneList();
         }
-        sceneMain = pannellum.viewer('canvas', jsonObj);
-    }
-}
-setSelectPanorama();
 
+        function loadFileList(folder) {
+            if (folder !== undefined) {
+                currentFolder = folder;
+            }
+            
+            // Показываем индикатор загрузки
+            $('#file-list').html('<p style="padding: 10px; text-align: center; color: #999;">Loading files...</p>');
+            
+            // Отправляем запрос к PHP скрипту
+            $.ajax({
+                url: 'get_files.php',
+                type: 'POST',
+                data: {
+                    folder: currentFolder,
+                    extensions: 'jpg,jpeg,png,gif'
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        allFiles = response.files;
+                        displayFiles(response.files);
+                        updateBreadcrumb();
+                    } else {
+                        $('#file-list').html('<p style="padding: 10px; text-align: center; color: #f00;">Error: ' + response.error + '</p>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#file-list').html('<p style="padding: 10px; text-align: center; color: #f00;">Failed to load files: ' + error + '</p>');
+                }
+            });
+        }
 
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-        orientation_roll = 0;
-        orientation_azimuth = 0;
-        pitchOld = 0
-        yawOld = 0
-        oldX = 0;
-        oldY = 0;
+        function displayFiles(files) {
+            var html = '';
+            
+            // Сначала показываем папки
+            files.forEach(function(file) {
+                if (file.type === 'folder') {
+                    html += `
+                        <div class="file-item folder" onclick="navigateToFolder('${file.path}')">
+                            <span style="margin-right: 5px;">📁</span>
+                            ${file.name}
+                            <span style="float: right; color: #999; font-size: 11px;">folder</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Затем показываем изображения
+            files.forEach(function(file) {
+                if (file.type === 'image') {
+                    var isCurrent = (currentScene === file.name) ? ' current' : '';
+                    // Веб-путь без "img/" в начале
+                    var webPath = file.name; // Просто имя файла для веб-доступа
+                    
+                    html += `
+                        <div class="file-item image${isCurrent}" onclick="loadImage('${webPath}')" 
+                             title="${file.name} (${file.size})">
+                            <span style="margin-right: 5px;">🖼️</span>
+                            ${file.name}
+                            <span style="float: right; color: #999; font-size: 11px;">${file.size}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (html === '') {
+                html = '<p style="padding: 10px; text-align: center; color: #999;">No files found</p>';
+            }
+            
+            $('#file-list').html(html);
+        }
+
+        function updateBreadcrumb() {
+            var breadcrumbHtml = '<a onclick="navigateToFolder(\'\')">Home</a>';
+            
+            if (currentFolder) {
+                var parts = currentFolder.split('/').filter(Boolean);
+                var currentPath = '';
+                
+                parts.forEach(function(part, index) {
+                    currentPath += (currentPath ? '/' : '') + part;
+                    breadcrumbHtml += ' &gt; ';
+                    
+                    if (index === parts.length - 1) {
+                        breadcrumbHtml += '<span>' + part + '</span>';
+                    } else {
+                        breadcrumbHtml += '<a onclick="navigateToFolder(\'' + currentPath + '\')">' + part + '</a>';
+                    }
+                });
+            }
+            
+            $('#breadcrumb').html(breadcrumbHtml);
+        }
+
+        function navigateToFolder(folderPath) {
+            loadFileList(folderPath);
+        }
+
+        function filterFiles() {
+            var searchTerm = $('#file-search').val().toLowerCase();
+            
+            if (!searchTerm) {
+                displayFiles(allFiles);
+                return;
+            }
+            
+            var filteredFiles = allFiles.filter(function(file) {
+                return file.name.toLowerCase().includes(searchTerm);
+            });
+            
+            displayFiles(filteredFiles);
+        }
+
+        function loadImage(imageName) {
+            // Для веб-доступа используем только имя файла (без "img/")
+            // Пример: DSCN0021.JPG вместо img/DSCN0021.JPG
+            imageName = 'img/' + imageName;
+            // Обновляем URL с параметром photo
+            var url = new URL(window.location.href);
+            url.searchParams.set('photo', imageName);
+            window.history.pushState({}, '', url);
+            
+            // Загружаем изображение в панорамный просмотрщик
+            setSelectPanorama({image: imageName});
+            
+            // Подсвечиваем выбранный файл
+            $('.file-item').removeClass('current');
+            $(event.target).closest('.file-item').addClass('current');
+        }
+
+        function setSelectPanorama(hotSpot) {
+            let params = new URLSearchParams(document.location.search);
+            let infoValue = params.get('info');
+            let photoValue = params.get('photo');
+
+            let canvas = document.getElementById('canvas');
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+
+            // Если есть параметр photo, загружаем напрямую указанное изображение
+            if (photoValue) {
+                // Веб-путь: только имя файла (DSCN0021.JPG)
+                var imageUrl = photoValue;
+                
+                let jsonObj = {
+                    "hotSpotDebug": false,
+                    "hotPointDebug": true,
+                    "sceneFadeDuration": 1000,
+                    "default": {
+                        "firstScene": "scene1"
+                    },
+                    "scenes": {
+                        "scene1": {
+                            "title": "Image: " + photoValue,
+                            "panorama": imageUrl, // Используем прямое имя файла
+                            "crossOrigin": "use-credentials",
+                            "autoLoad": true,
+                            "yaw": 0,
+                            "pitch": 0,
+                            "hotSpots": []
+                        }
+                    }
+                };
+                jsonObj.onClickHotSpot = onClickHotSpot;
+                jsonObj.onGetMapWindow = onGetMapWindow;
+                
+                if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
+                    sceneMain.destroy();
+                }
+                sceneMain = pannellum.viewer('canvas', jsonObj);
+                currentScene = photoValue;
+            }
+            // Если есть параметр info, загружаем через JSON конфигурацию
+            else if (infoValue) {
+                let jsonObj = getJsonUrlData('/Example/pano360/point_info/' + infoValue);
+                jsonObj.onClickHotSpot = onClickHotSpot;
+                jsonObj.onGetMapWindow = onGetMapWindow;
+                
+                if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
+                    sceneMain.destroy();
+                }
+                sceneMain = pannellum.viewer('canvas', jsonObj);
+                currentScene = infoValue;
+            }
+            // Если нет параметров, загружаем изображение по умолчанию
+            else {
+                // Веб-путь для изображения по умолчанию
+                var defaultImage = 'DSCN0129.JPG';
+                
+                let jsonObj = {
+                    "hotSpotDebug": false,
+                    "hotPointDebug": true,
+                    "sceneFadeDuration": 1000,
+                    "default": {
+                        "firstScene": "scene1"
+                    },
+                    "scenes": {
+                        "scene1": {
+                            "title": "Default Panorama",
+                            "panorama": defaultImage,
+                            "crossOrigin": "use-credentials",
+                            "autoLoad": true,
+                            "yaw": -6.77,
+                            "pitch": -24.41,
+                            "hotSpots": []
+                        }
+                    }
+                };
+                jsonObj.onClickHotSpot = onClickHotSpot;
+                jsonObj.onGetMapWindow = onGetMapWindow;
+                
+                if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
+                    sceneMain.destroy();
+                }
+                sceneMain = pannellum.viewer('canvas', jsonObj);
+                currentScene = 'default';
+            }
+            
+            updateViewInfo();
+        }
+
+        function onClickHotSpot(hs) {
+            const jsonName = hs['panorama_url']?.split('/')[4];
+            if (jsonName) {
+                const name = jsonName.split('.')[0];
+                
+                let currentUrl = new URL(window.location.href);
+                if (!currentUrl.searchParams.get('info')) {
+                    currentUrl.searchParams.append('info', hs.panorama_url.split('/')[4]);
+                } else {
+                    currentUrl.searchParams.set('info', hs.panorama_url.split('/')[4]);
+                }
+                window.history.pushState({}, '', currentUrl);
+                
+                let jsonObj = getJsonUrlData(hs['panorama_url']);
+                jsonObj.onClickHotSpot = onClickHotSpot;
+                jsonObj.onGetMapWindow = onGetMapWindow;
+                jsonObj['pitch'] = hs['point_pitch'];
+                jsonObj['yaw'] = hs['point_yaw'];
+                
+                if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
+                    sceneMain.destroy();
+                }
+                sceneMain = pannellum.viewer('canvas', jsonObj);
+                currentScene = name;
+                
+                updateViewInfo();
+                return true;
+            }
+            return false;
+        }
+
+        function onGetMapWindow() {
+            $('#w_map').window('open');
+        }
+
+        function updateSceneList() {
+            let sceneListHtml = '';
+            for (let sceneId in scenesData) {
+                sceneListHtml += `
+                    <div style="margin:5px 0;padding:5px;background:#f5f5f5;border-radius:3px;">
+                        <strong>${scenesData[sceneId].name}</strong>
+                        <button class="easyui-linkbutton" onclick="loadScene('${sceneId}')" 
+                                style="float:right;padding:2px 8px;font-size:12px;">
+                            Load
+                        </button>
+                    </div>
+                `;
+            }
+            $('#scene-list').html(sceneListHtml || '<p>No scenes available</p>');
+        }
+
+        function loadScene(sceneId) {
+            if (scenesData[sceneId] && sceneMain) {
+                sceneMain.loadScene(sceneId);
+                currentScene = sceneId;
+                updateViewInfo();
+            }
+        }
+
+        function zoomIn() {
+            if (sceneMain) {
+                sceneMain.setHfov(sceneMain.getHfov() - 5);
+                updateViewInfo();
+            }
+        }
+
+        function zoomOut() {
+            if (sceneMain) {
+                sceneMain.setHfov(sceneMain.getHfov() + 5);
+                updateViewInfo();
+            }
+        }
+
+        function resetView() {
+            if (sceneMain) {
+                sceneMain.lookAt(0, 0, 100, 1000);
+                updateViewInfo();
+            }
+        }
+
+        function toggleMap() {
+            $('#w_map').window('toggle');
+        }
+
+        function fullscreen() {
+            if (sceneMain) {
+                sceneMain.toggleFullscreen();
+            }
+        }
+
+        function refreshViewer() {
+            if (sceneMain) {
+                sceneMain.destroy();
+                setSelectPanorama();
+            }
+        }
+
+        function updateViewInfo() {
+            if (sceneMain) {
+                $('#pitch-info').text('Pitch: ' + sceneMain.getPitch().toFixed(2) + '°');
+                $('#yaw-info').text('Yaw: ' + sceneMain.getYaw().toFixed(2) + '°');
+                $('#hfov-info').text('HFOV: ' + sceneMain.getHfov().toFixed(2) + '°');
+            }
+        }
+
+        // Вспомогательные функции
+        function getJsonUrlData(url, data) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url, false);
+            xhr.send(data);
+            if (xhr.status != 200) {
+                console.error(xhr.status + ': ' + xhr.statusText + ' (' + url + ')');
+                return {'error': xhr.status + ' : ' + xhr.statusText};
+            } else {
+                return JSON.parse(xhr.response);
+            }
+        }
+
+        // Функции для управления ориентацией
+        var orientation_roll = 0;
+        var orientation_azimuth = 0;
+        var pitchOld = 0;
+        var yawOld = 0;
+        var oldX = 0;
+        var oldY = 0;
+
         function changePitch(value) {
-            var x = value*(-1);
-            x = x-45;
-            if (oldX==0) {
-                oldX = sceneMain.getPitch();
+            if (sceneMain) {
+                var x = value * (-1);
+                x = x - 45;
+                if (oldX == 0) {
+                    oldX = sceneMain.getPitch();
+                }
+                x = x + oldX;
+                sceneMain.setPitch(x, 100);
+                updateViewInfo();
             }
-            x = x+oldX;
-            sceneMain.setPitch(x,100);
         }
+
         function changeAzimuth(value) {
-            console.log("changeAzimuth--"+value)
-            var y = value;
-            y = y-180;
-            if (oldY==0) {
-                oldY = sceneMain.getYaw();
+            if (sceneMain) {
+                var y = value;
+                y = y - 180;
+                if (oldY == 0) {
+                    oldY = sceneMain.getYaw();
+                }
+                sceneMain.setYaw(y, 100);
+                updateViewInfo();
             }
-            sceneMain.setYaw(y, 100);
         }
+
         function defineProperty(propertyName, defaultValue, callback) {
             Object.defineProperty(window, propertyName, {
                 get() {
-                    return defaultValue
+                    return defaultValue;
                 },
                 set(v) {
                     if (callback) callback(v);
                     defaultValue = v;
                 }
             });
-        };
-        defineProperty('orientation_azimuth', {}, changeAzimuth)
-        defineProperty('orientation_roll', {}, changePitch)
+        }
 
-</script>
-
+        defineProperty('orientation_azimuth', {}, changeAzimuth);
+        defineProperty('orientation_roll', {}, changePitch);
+    </script>
+</body>
 </html>
