@@ -8,39 +8,149 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { width: 100%; height: 100%; overflow: hidden; }
         #canvas { width: 100%; height: 100%; }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div id="canvas"></div>
+    <div id="loading" class="loading" style="display: none;">Loading image...</div>
 
     <script src="lib/Pannellum2_5_6/pannellum.js"></script>
     <script src="lib/Pannellum2_5_6/libpannellum.js"></script>
-
 
 </body>
 <script>
     // Get image from URL parameter
     const urlParams = new URLSearchParams(window.location.search);
-    const photo = urlParams.get('photo') || 'img/04.01.2026/DSCN0033.JPG';
+    const photo = urlParams.get('photo') || 'img/DSCN0129.JPG';
 
-    // Initialize viewer
-    const viewer = pannellum.viewer('canvas', {
-        "default": {
-            "firstScene": "scene"
-        },
-        "scenes": {
-            "scene": {
-                "title": "Panorama",
-                "panorama": photo,
-                "crossOrigin": "use-credentials",
-                "autoLoad": true
+    // Show loading indicator
+    document.getElementById('loading').style.display = 'block';
+
+    // Function to preload image via iframe (same as in index.html)
+    function preloadImageViaIframe(url) {
+        return new Promise((resolve) => {
+            // Check if it's an external URL
+            const isExternal = /^https?:\/\//i.test(url);
+            
+            if (!isExternal) {
+                // For local images, no need for iframe preloading
+                resolve(url);
+                return;
             }
-        }
-    });
 
-    // Handle window resize
-    window.addEventListener('resize', function() {
-        viewer.resize();
-    });
+            // Ensure HTTPS for external URLs
+            let secureUrl = url;
+            if (secureUrl.startsWith('http://')) {
+                secureUrl = secureUrl.replace('http://', 'https://');
+            }
+
+            // Create temporary iframe for preloading
+            const tempIframe = document.createElement('iframe');
+            tempIframe.style.display = 'none';
+            tempIframe.style.width = '0';
+            tempIframe.style.height = '0';
+            tempIframe.style.border = '0';
+            tempIframe.style.position = 'absolute';
+            tempIframe.style.top = '-1000px';
+            tempIframe.style.left = '-1000px';
+            
+            // Set sandbox attribute for security
+            tempIframe.sandbox = 'allow-same-origin allow-scripts';
+            
+            // Add iframe to DOM
+            document.body.appendChild(tempIframe);
+
+            // Load via HTTPS with a small timeout
+            setTimeout(function() {
+                tempIframe.src = secureUrl;
+                console.log('Preloading external image via iframe:', secureUrl);
+
+                // Remove iframe after 10 seconds to clean up DOM
+                setTimeout(function() {
+                    if (tempIframe && tempIframe.parentNode) {
+                        tempIframe.parentNode.removeChild(tempIframe);
+                        console.log('Cleanup: iframe removed');
+                    }
+                }, 10000);
+                
+                // Resolve with original URL for Pannellum
+                resolve(url);
+            }, 100);
+        });
+    }
+
+    // Initialize viewer after preloading
+    async function initializeViewer() {
+        try {
+            // Check if it's an external image
+            const isExternal = /^https?:\/\//i.test(photo);
+            
+            let imageUrl = photo;
+            
+            // Preload external images via iframe
+            if (isExternal) {
+                imageUrl = await preloadImageViaIframe(photo);
+            }
+
+            // Configuration for viewer
+            const config = {
+                "default": {
+                    "firstScene": "scene"
+                },
+                "scenes": {
+                    "scene": {
+                        "title": isExternal ? "External Image" : "Panorama",
+                        "panorama": imageUrl,
+                        // IMPORTANT: For external URLs, set crossOrigin to undefined
+                        "crossOrigin": isExternal ? undefined : "use-credentials",
+                        "autoLoad": true,
+                        "yaw": 0,
+                        "pitch": 0
+                    }
+                },
+                "hotSpotDebug": false,
+                "sceneFadeDuration": 1000
+            };
+
+            // Initialize viewer
+            const viewer = pannellum.viewer('canvas', config);
+            
+            // Hide loading indicator
+            document.getElementById('loading').style.display = 'none';
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                viewer.resize();
+            });
+
+            // Handle viewer load errors
+            viewer.on('load', function() {
+                console.log('Image loaded successfully');
+                document.getElementById('loading').style.display = 'none';
+            });
+
+            viewer.on('error', function(err) {
+                console.error('Error loading image:', err);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('loading').textContent = 'Error loading image';
+            });
+
+        } catch (error) {
+            console.error('Failed to initialize viewer:', error);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('loading').textContent = 'Failed to load image';
+        }
+    }
+
+    // Start initialization
+    initializeViewer();
 </script>
 </html>
