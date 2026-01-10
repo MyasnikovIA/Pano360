@@ -3,8 +3,11 @@
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");
 
+// Корневой каталог проекта
+$projectRoot = realpath('C:/AppServ/www/Pano360Git') . '/';
+
 // Базовый каталог для изображений
-$baseDir = realpath('./img/') . '/';
+$baseDir = $projectRoot . 'img/';
 
 // Получаем запрошенную папку
 $folder = isset($_POST['folder']) ? $_POST['folder'] : '';
@@ -23,7 +26,7 @@ $requestedPath = $baseDir . $folder;
 
 // Проверяем существование каталога
 if (!is_dir($requestedPath)) {
-    echo json_encode(['success' => false, 'error' => 'Folder not found']);
+    echo json_encode(['success' => false, 'error' => 'Folder not found: ' . $requestedPath]);
     exit;
 }
 
@@ -42,13 +45,13 @@ try {
         }
         
         $fullPath = $requestedPath . '/' . $item;
-        $relativePath = ($folder ? $folder . '/' : '') . $item;
         
         if (is_dir($fullPath)) {
             // Это папка
+            $folderPath = ($folder ? $folder . '/' : '') . $item;
             $files[] = [
                 'name' => $item,
-                'path' => $relativePath,
+                'path' => $folderPath,  // Путь относительно папки img
                 'type' => 'folder',
                 'size' => ''
             ];
@@ -61,12 +64,19 @@ try {
                 $fileSize = filesize($fullPath);
                 $sizeFormatted = formatFileSize($fileSize);
                 
-                // Для веб-доступа используем только имя файла
-                // Физически файл в img/, но веб-доступ без img/
+                // Формируем путь относительно корня проекта
+                // Убираем полный путь до корня проекта
+                $relativePath = str_replace($projectRoot, '', $fullPath);
+                // Заменяем обратные слеши на прямые для веб-доступа
+                $relativePath = str_replace('\\', '/', $relativePath);
+                
+                // Формируем путь относительно папки img (для навигации по папкам)
+                $imgRelativePath = ($folder ? $folder . '/' : '') . $item;
                 
                 $files[] = [
                     'name' => $item,
-                    'path' => $relativePath, // Физический путь в файловой системе
+                    'path' => $imgRelativePath,           // Относительно папки img (для навигации)
+                    'web_path' => $relativePath,          // Относительно корня проекта (для веб-доступа)
                     'type' => 'image',
                     'size' => $sizeFormatted,
                     'full_path' => $fullPath,
@@ -90,7 +100,9 @@ try {
     echo json_encode([
         'success' => true,
         'files' => $files,
-        'current_folder' => $folder
+        'current_folder' => $folder,
+        'project_root' => $projectRoot,
+        'base_dir' => $baseDir
     ]);
     
 } catch (Exception $e) {
