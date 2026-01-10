@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Panorama Viewer</title>
-    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.min.js"></script>
     <!-- Pannellum CSS -->
     <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css"/>
     <!-- Pannellum JS -->
@@ -34,13 +33,16 @@
 <script>
     var sceneMain = null;
     var currentScene = null;
-    $(document).ready(function() {
+
+    // Заменяем $(document).ready() на DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
         loadInitialScene();
     });
 
     function loadInitialScene() {
         setSelectPanorama();
     }
+
     function setSelectPanorama(hotSpot) {
         let params = new URLSearchParams(document.location.search);
         let infoValue = params.get('info');
@@ -48,6 +50,7 @@
         let canvas = document.getElementById('canvas');
         canvas.style.width = '100%';
         canvas.style.height = '100%';
+
         if (photoValue) {
             var imageUrl = photoValue;
             var isExternal = /^https?:\/\//i.test(photoValue);
@@ -206,6 +209,7 @@
         }
         return false;
     }
+
     // Вспомогательные функции
     function getJsonUrlData(url, data) {
         var xhr = new XMLHttpRequest();
