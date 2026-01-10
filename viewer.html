@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Panorama Viewer</title>
+    <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; }
+        #canvas { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <div id="canvas"></div>
+
+    <script src="lib/Pannellum2_5_6/pannellum.js"></script>
+    <script src="lib/Pannellum2_5_6/libpannellum.js"></script>
+
+
+</body>
+<script>
+    // Get image from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const photo = urlParams.get('photo') || 'img/DSCN0129.JPG';
+
+    // Initialize viewer
+    const viewer = pannellum.viewer('canvas', {
+        "default": {
+            "firstScene": "scene"
+        },
+        "scenes": {
+            "scene": {
+                "title": "Panorama",
+                "panorama": photo,
+                "crossOrigin": "use-credentials",
+                "autoLoad": true
+            }
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        viewer.resize();
+    });
+</script>
+</html>

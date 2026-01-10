@@ -4,6 +4,7 @@
 https://raw.githack.com/MyasnikovIA/Pano360Slesarka/main/index.html
 
 https://raw.githack.com/MyasnikovIA/Pano360/main/index.html
+https://raw.githack.com/MyasnikovIA/Pano360/main/viewer.html
 
 
 Pano360Slesarka
