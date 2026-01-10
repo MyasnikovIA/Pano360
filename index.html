@@ -190,6 +190,10 @@
         function initFileListResize() {
             var resizeHandle = document.getElementById('file-list-resize');
             var fileList = document.getElementById('file-list');
+            if (!resizeHandle || !fileList) {
+                console.log('Resize elements not found, skipping initFileListResize');
+                return; // Прерываем выполнение, если элементы не найдены
+            }
             var startY, startHeight;
 
             resizeHandle.addEventListener('mousedown', initResize, false);
@@ -407,13 +411,16 @@
             canvas.style.width = '100%';
             canvas.style.height = '100%';
 
-			// Если есть параметр photo, загружаем напрямую указанное изображение
-			if (photoValue) {
-				// Веб-путь: только имя файла (DSCN0021.JPG) - ИСПРАВИТЬ ЭТО
-				var imageUrl = photoValue;
+            // Если есть параметр photo, загружаем напрямую указанное изображение
+            if (photoValue) {
+                var imageUrl = photoValue;
+                var isExternal = /^https?:\/\//i.test(photoValue);
 
-				// Изменить на:
-				var imageUrl = photoValue; // Оставляем как есть, так как photoValue уже содержит путь
+                // Если это внешний URL, используем прокси
+                if (isExternal) {
+                    imageUrl = 'proxy.php?url=' + encodeURIComponent(photoValue);
+                    // Теперь imageUrl находится на том же домене, CORS не мешает
+                }
 
                 let jsonObj = {
                     "hotSpotDebug": false,
@@ -424,9 +431,9 @@
                     },
                     "scenes": {
                         "scene1": {
-                            "title": "Image: " + photoValue,
-                            "panorama": imageUrl, // Используем прямое имя файла
-                            "crossOrigin": "use-credentials",
+                            "title": isExternal ? "External Image" : "Image: " + photoValue,
+                            "panorama": imageUrl,
+                            "crossOrigin": "anonymous",
                             "autoLoad": true,
                             "yaw": 0,
                             "pitch": 0,
@@ -434,6 +441,7 @@
                         }
                     }
                 };
+
                 jsonObj.onClickHotSpot = onClickHotSpot;
                 jsonObj.onGetMapWindow = onGetMapWindow;
 
@@ -655,8 +663,8 @@
             });
         }
 
-        defineProperty('orientation_azimuth', {}, changeAzimuth);
-        defineProperty('orientation_roll', {}, changePitch);
+        //defineProperty('orientation_azimuth', {}, changeAzimuth);
+        //defineProperty('orientation_roll', {}, changePitch);
     </script>
 </body>
 </html>
