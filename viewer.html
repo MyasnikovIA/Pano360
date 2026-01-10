@@ -3,154 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <title>Panorama Viewer</title>
+    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.min.js"></script>
+    <!-- Pannellum CSS -->
     <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css"/>
+    <!-- Pannellum JS -->
+    <script type="text/javascript" src="lib/Pannellum2_5_6/pannellum.js"></script>
+    <script type="text/javascript" src="lib/Pannellum2_5_6/libpannellum.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; }
-        #canvas { width: 100%; height: 100%; }
-        .loading {
+        /* Добавляем стили для полноэкранного отображения */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #canvas {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            color: #666;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
     </style>
 </head>
 <body>
-    <div id="canvas"></div>
-    <div id="loading" class="loading" style="display: none;">Loading image...</div>
-
-    <script src="lib/Pannellum2_5_6/pannellum.js"></script>
-    <script src="lib/Pannellum2_5_6/libpannellum.js"></script>
-
-</body>
+<div id="canvas"></div>
 <script>
-    // Get image from URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const photo = urlParams.get('photo') || 'img/DSCN0129.JPG';
+    // Глобальные переменные
+    var sceneMain = null;
+    var currentScene = null;
 
-    // Show loading indicator
-    document.getElementById('loading').style.display = 'block';
+    // Инициализация при загрузке страницы
+    $(document).ready(function() {
+        // Загрузка начальной сцены
+        loadInitialScene();
+    });
 
-    // Function to preload image via iframe (same as in index.html)
-    function preloadImageViaIframe(url) {
-        return new Promise((resolve) => {
-            // Check if it's an external URL
-            const isExternal = /^https?:\/\//i.test(url);
-            
-            if (!isExternal) {
-                // For local images, no need for iframe preloading
-                resolve(url);
-                return;
-            }
-
-            // Ensure HTTPS for external URLs
-            let secureUrl = url;
-            if (secureUrl.startsWith('http://')) {
-                secureUrl = secureUrl.replace('http://', 'https://');
-            }
-
-            // Create temporary iframe for preloading
-            const tempIframe = document.createElement('iframe');
-            tempIframe.style.display = 'none';
-            tempIframe.style.width = '0';
-            tempIframe.style.height = '0';
-            tempIframe.style.border = '0';
-            tempIframe.style.position = 'absolute';
-            tempIframe.style.top = '-1000px';
-            tempIframe.style.left = '-1000px';
-            
-            // Set sandbox attribute for security
-            tempIframe.sandbox = 'allow-same-origin allow-scripts';
-            
-            // Add iframe to DOM
-            document.body.appendChild(tempIframe);
-
-            // Load via HTTPS with a small timeout
-            setTimeout(function() {
-                tempIframe.src = secureUrl;
-                console.log('Preloading external image via iframe:', secureUrl);
-
-                // Remove iframe after 10 seconds to clean up DOM
-                setTimeout(function() {
-                    if (tempIframe && tempIframe.parentNode) {
-                        tempIframe.parentNode.removeChild(tempIframe);
-                        console.log('Cleanup: iframe removed');
-                    }
-                }, 10000);
-                
-                // Resolve with original URL for Pannellum
-                resolve(url);
-            }, 100);
-        });
+    function loadInitialScene() {
+        setSelectPanorama();
     }
 
-    // Initialize viewer after preloading
-    async function initializeViewer() {
-        try {
-            // Check if it's an external image
-            const isExternal = /^https?:\/\//i.test(photo);
-            
-            let imageUrl = photo;
-            
-            // Preload external images via iframe
+    function loadImage(imageName) {
+        // Для веб-доступа добавляем "img/" в начало
+        var webImagePath = 'img/' + imageName;
+
+        // Обновляем URL с параметром photo
+        var url = new URL(window.location.href);
+        url.searchParams.set('photo', webImagePath);
+        window.history.pushState({}, '', url);
+
+        // Загружаем изображение в панорамный просмотрщик
+        setSelectPanorama({image: webImagePath});
+    }
+
+    function setSelectPanorama(hotSpot) {
+        let params = new URLSearchParams(document.location.search);
+        let infoValue = params.get('info');
+        let photoValue = params.get('photo');
+
+        let canvas = document.getElementById('canvas');
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+
+        // Если есть параметр photo, загружаем напрямую указанное изображение
+        if (photoValue) {
+            var imageUrl = photoValue;
+            var isExternal = /^https?:\/\//i.test(photoValue);
+
+            // ОБХОДНОЙ ПУТЬ ДЛЯ ВНЕШНИХ URL
             if (isExternal) {
-                imageUrl = await preloadImageViaIframe(photo);
+                // Создаем временный iframe для предзагрузки изображения
+                // Это помогает браузеру кэшировать картинку до того, как Pannellum попытается её загрузить
+                var tempIframe = document.createElement('iframe');
+                tempIframe.style.display = 'none';
+                tempIframe.style.width = '0';
+                tempIframe.style.height = '0';
+                tempIframe.style.border = '0';
+                tempIframe.style.position = 'absolute';
+                tempIframe.style.top = '-1000px';
+                tempIframe.style.left = '-1000px';
+
+                // Добавляем iframe в DOM, но НЕ устанавливаем src сразу
+                document.body.appendChild(tempIframe);
+
+                // Устанавливаем src через небольшой таймаут
+                setTimeout(function() {
+                    tempIframe.src = photoValue;
+                    // Удаляем iframe через 10 секунд чтобы не засорять DOM
+                    setTimeout(function() {
+                        if (tempIframe && tempIframe.parentNode) {
+                            tempIframe.parentNode.removeChild(tempIframe);
+                        }
+                    }, 10000);
+                }, 100);
+
+                // Ключевые настройки для обхода XHR в Pannellum
+                imageUrl = photoValue; // Оставляем оригинальный URL
             }
 
-            // Configuration for viewer
-            const config = {
+            let jsonObj = {
+                "hotSpotDebug": false,
+                "hotPointDebug": true,
+                "sceneFadeDuration": 1000,
                 "default": {
-                    "firstScene": "scene"
+                    "firstScene": "scene1"
                 },
                 "scenes": {
-                    "scene": {
-                        "title": isExternal ? "External Image" : "Panorama",
+                    "scene1": {
+                        "title": isExternal ? "External Image" : "Image: " + photoValue,
                         "panorama": imageUrl,
-                        // IMPORTANT: For external URLs, set crossOrigin to undefined
+                        // ВАЖНО: для внешних URL устанавливаем crossOrigin в undefined
                         "crossOrigin": isExternal ? undefined : "use-credentials",
                         "autoLoad": true,
                         "yaw": 0,
-                        "pitch": 0
+                        "pitch": 0,
+                        "hotSpots": []
                     }
-                },
-                "hotSpotDebug": false,
-                "sceneFadeDuration": 1000
+                }
             };
+            // Дополнительные настройки для внешних изображений
+            if (isExternal) {
+                // Убеждаемся, что URL начинается с https://
+                var secureUrl = photoValue;
+                if (secureUrl.startsWith('http://')) {
+                    secureUrl = secureUrl.replace('http://', 'https://');
+                }
 
-            // Initialize viewer
-            const viewer = pannellum.viewer('canvas', config);
-            
-            // Hide loading indicator
-            document.getElementById('loading').style.display = 'none';
+                // Создаем временный iframe для предзагрузки изображения
+                var tempIframe = document.createElement('iframe');
+                tempIframe.style.display = 'none';
+                tempIframe.style.width = '0';
+                tempIframe.style.height = '0';
+                tempIframe.style.border = '0';
+                tempIframe.style.position = 'absolute';
+                tempIframe.style.top = '-1000px';
+                tempIframe.style.left = '-1000px';
 
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                viewer.resize();
-            });
+                // Устанавливаем атрибут sandbox для безопасности
+                tempIframe.sandbox = 'allow-same-origin allow-scripts';
 
-            // Handle viewer load errors
-            viewer.on('load', function() {
-                console.log('Image loaded successfully');
-                document.getElementById('loading').style.display = 'none';
-            });
+                // Добавляем iframe в DOM
+                document.body.appendChild(tempIframe);
 
-            viewer.on('error', function(err) {
-                console.error('Error loading image:', err);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('loading').textContent = 'Error loading image';
-            });
+                // Загружаем через HTTPS с небольшим таймаутом
+                setTimeout(function() {
+                    tempIframe.src = secureUrl;
+                    console.log('Preloading external image via iframe:', secureUrl);
 
-        } catch (error) {
-            console.error('Failed to initialize viewer:', error);
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('loading').textContent = 'Failed to load image';
+                    // Удаляем iframe через 10 секунд чтобы не засорять DOM
+                    setTimeout(function() {
+                        if (tempIframe && tempIframe.parentNode) {
+                            tempIframe.parentNode.removeChild(tempIframe);
+                            console.log('Cleanup: iframe removed');
+                        }
+                    }, 10000);
+                }, 100);
+
+                imageUrl = photoValue; // Оставляем оригинальный URL для Pannellum
+            }
+
+            jsonObj.onClickHotSpot = onClickHotSpot;
+
+            if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
+                sceneMain.destroy();
+            }
+            sceneMain = pannellum.viewer('canvas', jsonObj);
+            currentScene = photoValue;
+        }
+        // Если есть параметр info, загружаем через JSON конфигурацию
+        else if (infoValue) {
+            let jsonObj = getJsonUrlData('/Example/pano360/point_info/' + infoValue);
+            jsonObj.onClickHotSpot = onClickHotSpot;
+
+            if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
+                sceneMain.destroy();
+            }
+            sceneMain = pannellum.viewer('canvas', jsonObj);
+            currentScene = infoValue;
+        }
+        // Если нет параметров, загружаем изображение по умолчанию
+        else {
+            // Веб-путь для изображения по умолчанию
+            var defaultImage = 'img/04.01.2026/DSCN0021.JPG';
+
+            let jsonObj = {
+                "hotSpotDebug": false,
+                "hotPointDebug": true,
+                "sceneFadeDuration": 1000,
+                "default": {
+                    "firstScene": "scene1"
+                },
+                "scenes": {
+                    "scene1": {
+                        "title": "Default Panorama",
+                        "panorama": defaultImage,
+                        "crossOrigin": "use-credentials",
+                        "autoLoad": true,
+                        "yaw": -6.77,
+                        "pitch": -24.41,
+                        "hotSpots": []
+                    }
+                }
+            };
+            jsonObj.onClickHotSpot = onClickHotSpot;
+
+            if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
+                sceneMain.destroy();
+            }
+            sceneMain = pannellum.viewer('canvas', jsonObj);
+            currentScene = 'default';
         }
     }
 
-    // Start initialization
-    initializeViewer();
+    function onClickHotSpot(hs) {
+        const jsonName = hs['panorama_url']?.split('/')[4];
+        if (jsonName) {
+            const name = jsonName.split('.')[0];
+
+            let currentUrl = new URL(window.location.href);
+            if (!currentUrl.searchParams.get('info')) {
+                currentUrl.searchParams.append('info', hs.panorama_url.split('/')[4]);
+            } else {
+                currentUrl.searchParams.set('info', hs.panorama_url.split('/')[4]);
+            }
+            window.history.pushState({}, '', currentUrl);
+
+            let jsonObj = getJsonUrlData(hs['panorama_url']);
+            jsonObj.onClickHotSpot = onClickHotSpot;
+            jsonObj['pitch'] = hs['point_pitch'];
+            jsonObj['yaw'] = hs['point_yaw'];
+
+            if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
+                sceneMain.destroy();
+            }
+            sceneMain = pannellum.viewer('canvas', jsonObj);
+            currentScene = name;
+
+            return true;
+        }
+        return false;
+    }
+
+    // Вспомогательные функции
+    function getJsonUrlData(url, data) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, false);
+        xhr.send(data);
+        if (xhr.status != 200) {
+            console.error(xhr.status + ': ' + xhr.statusText + ' (' + url + ')');
+            return {'error': xhr.status + ' : ' + xhr.statusText};
+        } else {
+            return JSON.parse(xhr.response);
+        }
+    }
 </script>
+</body>
 </html>
