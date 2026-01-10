@@ -416,10 +416,35 @@
                 var imageUrl = photoValue;
                 var isExternal = /^https?:\/\//i.test(photoValue);
 
-                // Если это внешний URL, используем прокси
+                // ОБХОДНОЙ ПУТЬ ДЛЯ ВНЕШНИХ URL
                 if (isExternal) {
-                    imageUrl = 'proxy.php?url=' + encodeURIComponent(photoValue);
-                    // Теперь imageUrl находится на том же домене, CORS не мешает
+                    // Создаем временный iframe для предзагрузки изображения
+                    // Это помогает браузеру кэшировать картинку до того, как Pannellum попытается её загрузить
+                    var tempIframe = document.createElement('iframe');
+                    tempIframe.style.display = 'none';
+                    tempIframe.style.width = '0';
+                    tempIframe.style.height = '0';
+                    tempIframe.style.border = '0';
+                    tempIframe.style.position = 'absolute';
+                    tempIframe.style.top = '-1000px';
+                    tempIframe.style.left = '-1000px';
+
+                    // Добавляем iframe в DOM, но НЕ устанавливаем src сразу
+                    document.body.appendChild(tempIframe);
+
+                    // Устанавливаем src через небольшой таймаут
+                    setTimeout(function() {
+                        tempIframe.src = photoValue;
+                        // Удаляем iframe через 10 секунд чтобы не засорять DOM
+                        setTimeout(function() {
+                            if (tempIframe && tempIframe.parentNode) {
+                                tempIframe.parentNode.removeChild(tempIframe);
+                            }
+                        }, 10000);
+                    }, 100);
+
+                    // Ключевые настройки для обхода XHR в Pannellum
+                    imageUrl = photoValue; // Оставляем оригинальный URL
                 }
 
                 let jsonObj = {
@@ -433,7 +458,8 @@
                         "scene1": {
                             "title": isExternal ? "External Image" : "Image: " + photoValue,
                             "panorama": imageUrl,
-                            "crossOrigin": "anonymous",
+                            // ВАЖНО: для внешних URL устанавливаем crossOrigin в undefined
+                            "crossOrigin": isExternal ? undefined : "use-credentials",
                             "autoLoad": true,
                             "yaw": 0,
                             "pitch": 0,
@@ -441,6 +467,46 @@
                         }
                     }
                 };
+                // Дополнительные настройки для внешних изображений
+                if (isExternal) {
+                    // Убеждаемся, что URL начинается с https://
+                    var secureUrl = photoValue;
+                    if (secureUrl.startsWith('http://')) {
+                        secureUrl = secureUrl.replace('http://', 'https://');
+                    }
+
+                    // Создаем временный iframe для предзагрузки изображения
+                    var tempIframe = document.createElement('iframe');
+                    tempIframe.style.display = 'none';
+                    tempIframe.style.width = '0';
+                    tempIframe.style.height = '0';
+                    tempIframe.style.border = '0';
+                    tempIframe.style.position = 'absolute';
+                    tempIframe.style.top = '-1000px';
+                    tempIframe.style.left = '-1000px';
+
+                    // Устанавливаем атрибут sandbox для безопасности
+                    tempIframe.sandbox = 'allow-same-origin allow-scripts';
+
+                    // Добавляем iframe в DOM
+                    document.body.appendChild(tempIframe);
+
+                    // Загружаем через HTTPS с небольшим таймаутом
+                    setTimeout(function() {
+                        tempIframe.src = secureUrl;
+                        console.log('Preloading external image via iframe:', secureUrl);
+
+                        // Удаляем iframe через 10 секунд чтобы не засорять DOM
+                        setTimeout(function() {
+                            if (tempIframe && tempIframe.parentNode) {
+                                tempIframe.parentNode.removeChild(tempIframe);
+                                console.log('Cleanup: iframe removed');
+                            }
+                        }, 10000);
+                    }, 100);
+
+                    imageUrl = photoValue; // Оставляем оригинальный URL для Pannellum
+                }
 
                 jsonObj.onClickHotSpot = onClickHotSpot;
                 jsonObj.onGetMapWindow = onGetMapWindow;
