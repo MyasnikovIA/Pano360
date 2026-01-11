@@ -639,6 +639,25 @@
             }
         }
     });
+    // В функции onClick в viewer.html добавьте:
+    function onClick(coords, screenCoords, event) {
+        console.log("onClick", coords);
+
+        // Отправляем координаты клика в родительское окно (для предпросмотра)
+        try {
+            if (window.parent && window !== window.parent) {
+                window.parent.postMessage({
+                    type: 'pannellum_click',
+                    yaw: coords.yaw,
+                    pitch: coords.pitch,
+                    screenX: screenCoords.x,
+                    screenY: screenCoords.y
+                }, '*');
+            }
+        } catch(e) {
+            console.log('Cannot post message to parent');
+        }
+    }
 
 </script>
 </body>

@@ -30,6 +30,195 @@
 </head>
 <body>
 <div id="canvas"></div>
+<!-- Добавить перед закрывающим тегом </body> -->
+<div id="hotspotModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Настройка HotSpot</h2>
+
+        <div class="form-group">
+            <label for="hotspotName">Название точки:</label>
+            <input type="text" id="hotspotName" placeholder="Введите название (необязательно)">
+        </div>
+
+        <div class="form-group">
+            <label for="hotspotUrl">URL панорамы для перехода:</label>
+            <div class="url-input-group">
+                <input type="text" id="hotspotUrl" placeholder="Введите URL панорамы">
+                <button id="previewButton" class="btn">Предпросмотр</button>
+            </div>
+        </div>
+
+        <div id="previewContainer" class="preview-container" style="display: none;">
+            <h3>Предпросмотр панорамы</h3>
+            <p>Нажмите на место, куда должен смотреть камера при переходе</p>
+            <div id="previewIframeContainer" class="iframe-container">
+                <!-- Здесь будет iframe с viewer.html -->
+            </div>
+            <div class="preview-coordinates">
+                <p>Выбранные координаты:</p>
+                <div id="selectedCoordinates">Не выбрано</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="hotspotType">Тип точки:</label>
+            <select id="hotspotType">
+                <option value="scene">Переход на сцену</option>
+                <option value="info">Информационная</option>
+                <option value="custom">Пользовательская</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="hotspotText">Текст на точке:</label>
+            <input type="text" id="hotspotText" placeholder="Текст, который будет отображаться">
+        </div>
+
+        <div class="modal-actions">
+            <button id="saveHotspotButton" class="btn btn-primary">Сохранить точку</button>
+            <button id="exportJsonButton" class="btn btn-secondary">Экспорт в JSON</button>
+            <button id="cancelButton" class="btn">Отмена</button>
+        </div>
+
+        <div id="currentHotspotsList" class="hotspots-list">
+            <h3>Текущие точки:</h3>
+            <div id="hotspotsContainer"></div>
+        </div>
+    </div>
+</div>
+<style>
+    /* Стили для модального окна */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 900px;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .url-input-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .url-input-group input {
+        flex: 1;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #2196F3;
+        color: white;
+    }
+
+    .preview-container {
+        margin: 20px 0;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 4px;
+    }
+
+    .iframe-container {
+        width: 100%;
+        height: 300px;
+        border: 1px solid #ccc;
+        margin: 10px 0;
+    }
+
+    .iframe-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .preview-coordinates {
+        background-color: #f5f5f5;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .hotspots-list {
+        margin-top: 20px;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
+
+    .hotspot-item {
+        padding: 10px;
+        border: 1px solid #ddd;
+        margin-bottom: 5px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .hotspot-actions {
+        display: flex;
+        gap: 5px;
+    }
+</style>
 <script>
     var sceneMain = null;
     var currentScene = null;
@@ -200,8 +389,15 @@
         }
     }
 
-    function onDblClick(hs) {
-        console.log("onClick", arguments[0]);
+    function onDblClick(coords, screenCoords, event) {
+        console.log("Double click on scene:", {
+            coords: coords,
+            screenCoords: screenCoords,
+            event: event
+        });
+
+        // Открываем модальное окно для создания HotSpot
+        openHotSpotModal(coords);
     }
 
     function onClick(hs) {
@@ -378,7 +574,388 @@
             sceneMain.lookAt(coords.pitch, coords.yaw, sceneMain.getHfov(), 500);
         }
     }
+    // Переменные для управления состоянием
+    var currentHotspots = [];
+    var currentCoords = null;
+    var selectedPreviewCoords = null;
+    var previewIframe = null;
 
+    // Функция открытия модального окна
+    function openHotSpotModal(coords) {
+        currentCoords = coords;
+        selectedPreviewCoords = null;
+
+        // Показать модальное окно
+        var modal = document.getElementById('hotspotModal');
+        modal.style.display = 'flex';
+
+        // Очистить поля
+        document.getElementById('hotspotName').value = '';
+        document.getElementById('hotspotUrl').value = '';
+        document.getElementById('hotspotType').value = 'scene';
+        document.getElementById('hotspotText').value = '';
+        document.getElementById('selectedCoordinates').textContent = 'Не выбрано';
+        document.getElementById('previewContainer').style.display = 'none';
+
+        // Загрузить список существующих точек
+        loadHotspotsList();
+    }
+
+    // Функция закрытия модального окна
+    function closeModal() {
+        var modal = document.getElementById('hotspotModal');
+        modal.style.display = 'none';
+
+        // Уничтожить iframe если он существует
+        if (previewIframe) {
+            previewIframe.remove();
+            previewIframe = null;
+        }
+    }
+
+    // Функция загрузки предпросмотра
+    // В edit.html в функции loadPreview() замените создание iframe на:
+    function loadPreview() {
+        var url = document.getElementById('hotspotUrl').value;
+        if (!url) {
+            alert('Введите URL панорамы');
+            return;
+        }
+
+        // Показать контейнер предпросмотра
+        document.getElementById('previewContainer').style.display = 'block';
+
+        // Создать iframe с viewer_preview.html
+        var iframeContainer = document.getElementById('previewIframeContainer');
+        iframeContainer.innerHTML = '';
+
+        previewIframe = document.createElement('iframe');
+        previewIframe.src = 'viewer_preview.html?photo=' + encodeURIComponent(url);
+
+        iframeContainer.appendChild(previewIframe);
+
+        // Добавить обработчик сообщений от iframe
+        window.addEventListener('message', handlePreviewMessage);
+    }
+
+
+    function handlePreviewMessage(event) {
+        var iframe = document.querySelector('#previewIframeContainer iframe');
+        if (!iframe || event.source !== iframe.contentWindow) return;
+
+        if (event.data && event.data.type === 'hotspot_preview_coords') {
+            selectedPreviewCoords = {
+                click: event.data.clickCoords,
+                view: event.data.viewCoords
+            };
+
+            var coordsText = `
+            <strong>Координаты клика:</strong><br>
+            Yaw: ${selectedPreviewCoords.click.yaw.toFixed(2)}°,
+            Pitch: ${selectedPreviewCoords.click.pitch.toFixed(2)}°<br><br>
+            <strong>Направление камеры:</strong><br>
+            Yaw: ${selectedPreviewCoords.view.yaw.toFixed(2)}°,
+            Pitch: ${selectedPreviewCoords.view.pitch.toFixed(2)}°
+        `;
+
+            document.getElementById('selectedCoordinates').innerHTML = coordsText;
+        }
+    }
+
+    // Функция сохранения HotSpot
+    // В edit.html заменяем функцию saveHotspot
+    function saveHotspot() {
+        var name = document.getElementById('hotspotName').value;
+        var url = document.getElementById('hotspotUrl').value;
+        var type = document.getElementById('hotspotType').value;
+        var text = document.getElementById('hotspotText').value;
+
+        // Проверка обязательных полей
+        if (!url) {
+            alert('URL панорамы обязателен для заполнения');
+            return;
+        }
+
+        // Создаем объект HotSpot в требуемом формате
+        var hotspot = {
+            id: Date.now(), // Уникальный ID
+            name: name || 'Без имени',
+            type: type,
+            text: text || 'Точка перехода',
+            pitch: currentCoords.pitch,
+            yaw: currentCoords.yaw,
+            targetPitch: selectedPreviewCoords ? selectedPreviewCoords.view.pitch : 0,
+            targetYaw: selectedPreviewCoords ? selectedPreviewCoords.view.yaw : 0,
+            panorama_url: url,
+            createdAt: new Date().toISOString()
+        };
+
+        // Добавляем в массив точек
+        currentHotspots.push(hotspot);
+
+        // Обновляем список точек
+        loadHotspotsList();
+
+        // Обновляем текущую сцену с новыми точками
+        updateSceneWithHotspots();
+
+        // Сохраняем точки в JSON файл
+        saveHotspotsToJson(hotspot.panorama_url);
+
+        alert('Точка сохранена и JSON файл обновлен!');
+    }
+
+
+    // Обновляем функцию updateSceneWithHotspots для правильного формата
+    function updateSceneWithHotspots() {
+        if (!sceneMain) return;
+
+        // Преобразуем точки в формат Pannellum
+        var pannellumHotspots = currentHotspots.map(function(hotspot) {
+            return {
+                pitch: hotspot.pitch,
+                yaw: hotspot.yaw,
+                type: hotspot.type || "scene",
+                text: hotspot.text,
+                sceneId: "scene1",
+                panorama_url: hotspot.panorama_url,
+                point_pitch: hotspot.targetPitch || 0,
+                point_yaw: hotspot.targetYaw || 0
+            };
+        });
+
+        // Обновляем hotspots в текущей сцене
+        var scene = sceneMain.getScene();
+        sceneMain.removeHotSpot('all');
+
+        pannellumHotspots.forEach(function(hotspot, index) {
+            sceneMain.addHotSpot(hotspot, "scene1");
+        });
+    }
+
+    // Функция сохранения точек в JSON файл
+    function saveHotspotsToJson(imageUrl) {
+        if (currentHotspots.length === 0) return;
+
+        // Извлекаем имя файла из URL
+        var fileName = extractFileNameFromUrl(imageUrl);
+        if (!fileName) {
+            console.error('Не удалось извлечь имя файла из URL:', imageUrl);
+            return;
+        }
+
+        // Меняем расширение на .json
+        var jsonFileName = fileName.replace(/\.[^/.]+$/, "") + ".json";
+
+        // Создаем JSON структуру (просто массив точек)
+        var jsonData = JSON.stringify(currentHotspots, null, 2);
+
+        // Создаем Blob и ссылку для скачивания
+        var blob = new Blob([jsonData], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+
+        // Создаем временную ссылку для скачивания
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = jsonFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Очищаем URL через 1 секунду
+        setTimeout(function() {
+            URL.revokeObjectURL(url);
+        }, 1000);
+
+        console.log('JSON файл сохранен как:', jsonFileName);
+    }
+    // Функция извлечения имени файла из URL
+    function extractFileNameFromUrl(url) {
+        try {
+            // Убираем параметры запроса
+            var urlWithoutParams = url.split('?')[0];
+
+            // Извлекаем имя файла из пути
+            var parts = urlWithoutParams.split('/');
+            var fileName = parts[parts.length - 1];
+
+            // Проверяем, что есть расширение
+            if (!fileName || fileName.indexOf('.') === -1) {
+                return null;
+            }
+
+            return fileName;
+        } catch (e) {
+            console.error('Ошибка при извлечении имени файла:', e);
+            return null;
+        }
+    }
+    // Функция загрузки списка точек
+    function loadHotspotsList() {
+        var container = document.getElementById('hotspotsContainer');
+        container.innerHTML = '';
+
+        if (currentHotspots.length === 0) {
+            container.innerHTML = '<p>Нет созданных точек</p>';
+            return;
+        }
+
+        currentHotspots.forEach(function(hotspot, index) {
+            var item = document.createElement('div');
+            item.className = 'hotspot-item';
+            item.innerHTML = `
+            <div>
+                <strong>${hotspot.name}</strong><br>
+                <small>Координаты: Yaw ${hotspot.yaw.toFixed(2)}, Pitch ${hotspot.pitch.toFixed(2)}</small><br>
+                <small>URL: ${hotspot.panorama_url.substring(0, 50)}...</small>
+            </div>
+            <div class="hotspot-actions">
+                <button onclick="editHotspot(${index})" class="btn">✏️</button>
+                <button onclick="deleteHotspot(${index})" class="btn">🗑️</button>
+            </div>
+        `;
+            container.appendChild(item);
+        });
+    }
+
+    // Функция редактирования точки
+    function editHotspot(index) {
+        var hotspot = currentHotspots[index];
+
+        // Заполняем поля формы
+        document.getElementById('hotspotName').value = hotspot.name;
+        document.getElementById('hotspotUrl').value = hotspot.panorama_url;
+        document.getElementById('hotspotText').value = hotspot.text;
+
+        // Устанавливаем текущие координаты
+        currentCoords = {
+            pitch: hotspot.pitch,
+            yaw: hotspot.yaw
+        };
+
+        // Удаляем точку из массива для пересоздания
+        currentHotspots.splice(index, 1);
+
+        // Обновляем список
+        loadHotspotsList();
+    }
+
+    // Функция удаления точки
+    function deleteHotspot(index) {
+        if (confirm('Удалить эту точку?')) {
+            currentHotspots.splice(index, 1);
+            loadHotspotsList();
+            updateSceneWithHotspots();
+        }
+    }
+
+
+    // Обновляем функцию экспорта в JSON
+    function exportToJson() {
+        if (currentHotspots.length === 0) {
+            alert('Нет точек для экспорта');
+            return;
+        }
+
+        // Получаем имя файла из текущей сцены
+        var imageUrl = '';
+
+        // Пытаемся получить URL текущей панорамы
+        if (currentScene && currentScene !== 'default') {
+            imageUrl = currentScene;
+        } else if (currentHotspots.length > 0) {
+            // Берем URL из первой точки
+            imageUrl = currentHotspots[0].panorama_url;
+        }
+
+        if (!imageUrl) {
+            // Если не нашли URL, используем дефолтное имя
+            var jsonString = JSON.stringify(currentHotspots, null, 2);
+            downloadJsonFile(jsonString, 'hotspots_export.json');
+            return;
+        }
+
+        // Сохраняем с правильным именем
+        saveHotspotsToJson(imageUrl);
+    }
+    // Вспомогательная функция для скачивания JSON файла
+    function downloadJsonFile(jsonData, fileName) {
+        var blob = new Blob([jsonData], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(function() {
+            URL.revokeObjectURL(url);
+        }, 1000);
+    }
+
+
+
+    // Инициализация обработчиков событий при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        // Кнопка предпросмотра
+        document.getElementById('previewButton').addEventListener('click', loadPreview);
+
+        // Кнопка сохранения
+        document.getElementById('saveHotspotButton').addEventListener('click', saveHotspot);
+
+        // Кнопка экспорта
+        document.getElementById('exportJsonButton').addEventListener('click', exportToJson);
+
+        // Кнопка отмены
+        document.getElementById('cancelButton').addEventListener('click', closeModal);
+
+        // Кнопка закрытия модального окна
+        document.querySelector('.close').addEventListener('click', closeModal);
+
+        // Закрытие модального окна при клике вне его
+        document.getElementById('hotspotModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Модифицируем существующий onDblClick
+        window.onDblClick = function(coords, screenCoords, event) {
+            console.log("Double click on scene:", {
+                coords: coords,
+                screenCoords: screenCoords,
+                event: event
+            });
+
+            // Открываем модальное окно для создания HotSpot
+            openHotSpotModal(coords);
+        };
+    });
+    // Функция для загрузки существующих точек из JSON файла
+    function loadExistingHotspotsFromJson(imageUrl) {
+        if (!imageUrl) return;
+
+        var fileName = extractFileNameFromUrl(imageUrl);
+        if (!fileName) return;
+
+        var jsonFileName = fileName.replace(/\.[^/.]+$/, "") + ".json";
+
+        // В реальном приложении здесь был бы AJAX запрос для загрузки файла
+        // Для демонстрации покажем сообщение
+        console.log('Попытка загрузить JSON файл:', jsonFileName);
+        debugger
+        // В реальной реализации нужно сделать:
+        // fetch(jsonFileName)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         currentHotspots = data;
+        //         loadHotspotsList();
+        //         updateSceneWithHotspots();
+        //     })
+        //     .catch(error => console.log('JSON файл не найден:', error));
+    }
 </script>
 </body>
 </html>
