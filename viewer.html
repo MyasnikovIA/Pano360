@@ -117,8 +117,9 @@
                         "panorama": imageUrl,
                         "crossOrigin": isExternal ? undefined : "use-credentials",
                         "autoLoad": true,
-                        "yaw": 0,
-                        "pitch": 0,
+                        // Устанавливаем направление взгляда из hotSpot, если передано
+                        "yaw": (hotSpot && hotSpot.point_yaw !== undefined) ? hotSpot.point_yaw : 0,
+                        "pitch": (hotSpot && hotSpot.point_pitch !== undefined) ? hotSpot.point_pitch : 0,
                         "hotSpots": allHotSpots.length > 0 ? allHotSpots : []
                     }
                 }
@@ -146,6 +147,16 @@
             jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
             jsonObj.onContextMenu = onContextMenu;
 
+            // Устанавливаем направление взгляда из hotSpot, если передано
+            if (hotSpot) {
+                if (hotSpot.point_pitch !== undefined && jsonObj.scenes && jsonObj.scenes.scene1) {
+                    jsonObj.scenes.scene1.pitch = hotSpot.point_pitch;
+                }
+                if (hotSpot.point_yaw !== undefined && jsonObj.scenes && jsonObj.scenes.scene1) {
+                    jsonObj.scenes.scene1.yaw = hotSpot.point_yaw;
+                }
+            }
+
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
             }
@@ -169,8 +180,8 @@
                         "panorama": defaultImage,
                         "crossOrigin": "use-credentials",
                         "autoLoad": true,
-                        "yaw": -6.77,
-                        "pitch": -24.41,
+                        "yaw": (hotSpot && hotSpot.point_yaw !== undefined) ? hotSpot.point_yaw : -6.77,
+                        "pitch": (hotSpot && hotSpot.point_pitch !== undefined) ? hotSpot.point_pitch : -24.41,
                         "hotSpots": []
                     }
                 }
@@ -231,6 +242,7 @@
     }
 
     function onClickHotSpot(hs) {
+
         console.log("onClickHotSpot", hs);
 
         // Проверяем, есть ли URL для загрузки новой сцены
