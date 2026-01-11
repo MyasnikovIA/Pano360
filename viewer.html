@@ -43,7 +43,7 @@
         setSelectPanorama();
     }
 
-    function setSelectPanorama(hotSpot) {
+    async function setSelectPanorama(hotSpot) {
         let params = new URLSearchParams(document.location.search);
         let infoValue = params.get('info');
         let photoValue = params.get('photo');
@@ -55,7 +55,22 @@
         if (photoValue) {
             var imageUrl = photoValue;
             var isExternal = /^https?:\/\//i.test(photoValue);
+
+            // Для внешних изображений пробуем загрузить JSON с горячими точками
+            var hotspotsFromJson = [];
             if (isExternal) {
+                // Создаем URL для JSON файла
+                var jsonUrl = photoValue.replace(/\.[^/.]+$/, "") + ".json";
+
+                // Пробуем загрузить JSON
+                try {
+                    hotspotsFromJson = await loadHotSpotsFromJson(jsonUrl);
+                    console.log("Loaded hotspots from JSON:", hotspotsFromJson);
+                } catch (error) {
+                    console.log("No JSON file found or error loading:", jsonUrl);
+                }
+
+                // Также добавляем iframe для предзагрузки изображения
                 var tempIframe = document.createElement('iframe');
                 tempIframe.style.display = 'none';
                 tempIframe.style.width = '0';
@@ -64,20 +79,31 @@
                 tempIframe.style.position = 'absolute';
                 tempIframe.style.top = '-1000px';
                 tempIframe.style.left = '-1000px';
-                // Добавляем iframe в DOM, но НЕ устанавливаем src сразу
                 document.body.appendChild(tempIframe);
-                // Устанавливаем src через небольшой таймаут
+
                 setTimeout(function() {
                     tempIframe.src = photoValue;
-                    // Удаляем iframe через 10 секунд чтобы не засорять DOM
                     setTimeout(function() {
                         if (tempIframe && tempIframe.parentNode) {
                             tempIframe.parentNode.removeChild(tempIframe);
                         }
                     }, 10000);
                 }, 100);
-                imageUrl = photoValue;
             }
+
+            // Если есть hotspots в URL параметре, парсим их
+            var hotspotsArray = [];
+            if (hotSpots) {
+                try {
+                    hotspotsArray = JSON.parse(hotSpots);
+                } catch (e) {
+                    console.error("Error parsing hotSpots URL parameter:", e);
+                }
+            }
+
+            // Объединяем hotspots из JSON и URL параметра
+            var allHotSpots = [...hotspotsFromJson, ...hotspotsArray];
+
             let jsonObj = {
                 "hotSpotDebug": false,
                 "hotPointDebug": true,
@@ -87,60 +113,24 @@
                 },
                 "scenes": {
                     "scene1": {
-                        //"title": isExternal ? "External Image" : "Image: " + photoValue,
                         "title": "",
                         "panorama": imageUrl,
                         "crossOrigin": isExternal ? undefined : "use-credentials",
                         "autoLoad": true,
                         "yaw": 0,
                         "pitch": 0,
-                        "hotSpots": hotSpots ? hotSpots : []
+                        "hotSpots": allHotSpots.length > 0 ? allHotSpots : []
                     }
                 }
             };
-            // Дополнительные настройки для внешних изображений
-            if (isExternal) {
-                // Убеждаемся, что URL начинается с https://
-                var secureUrl = photoValue;
-                if (secureUrl.startsWith('http://')) {
-                    secureUrl = secureUrl.replace('http://', 'https://');
-                }
 
-                // Создаем временный iframe для предзагрузки изображения
-                var tempIframe = document.createElement('iframe');
-                tempIframe.style.display = 'none';
-                tempIframe.style.width = '0';
-                tempIframe.style.height = '0';
-                tempIframe.style.border = '0';
-                tempIframe.style.position = 'absolute';
-                tempIframe.style.top = '-1000px';
-                tempIframe.style.left = '-1000px';
-
-                // Устанавливаем атрибут sandbox для безопасности
-                tempIframe.sandbox = 'allow-same-origin allow-scripts';
-
-                // Добавляем iframe в DOM
-                document.body.appendChild(tempIframe);
-
-                // Загружаем через HTTPS с небольшим таймаутом
-                setTimeout(function() {
-                    tempIframe.src = secureUrl;
-                    console.log('Preloading external image via iframe:', secureUrl);
-                    // Удаляем iframe через 10 секунд чтобы не засорять DOM
-                    setTimeout(function() {
-                        if (tempIframe && tempIframe.parentNode) {
-                            tempIframe.parentNode.removeChild(tempIframe);
-                            console.log('Cleanup: iframe removed');
-                        }
-                    }, 10000);
-                }, 100);
-                imageUrl = photoValue; // Оставляем оригинальный URL для Pannellum
-            }
+            // Добавляем обработчик для перехода по hotspots
             jsonObj.onClickHotSpot = onClickHotSpot;
             jsonObj.onDblClick = onDblClick;
             jsonObj.onClick = onClick;
             jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
             jsonObj.onContextMenu = onContextMenu;
+
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
             }
@@ -164,7 +154,6 @@
         }
         // Если нет параметров, загружаем изображение по умолчанию
         else {
-            // Веб-путь для изображения по умолчанию
             var defaultImage = 'img/04.01.2026/DSCN0021.JPG';
 
             let jsonObj = {
@@ -200,6 +189,39 @@
         }
     }
 
+    // Функция для загрузки hotspots из JSON файла
+    async function loadHotSpotsFromJson(jsonUrl) {
+        try {
+            const response = await fetch(jsonUrl, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const hotspots = await response.json();
+
+            // Проверяем, является ли результат массивом
+            if (Array.isArray(hotspots)) {
+                return hotspots;
+            } else if (hotspots.hotSpots && Array.isArray(hotspots.hotSpots)) {
+                return hotspots.hotSpots;
+            } else if (hotspots.scenes && hotspots.scenes.scene1 && hotspots.scenes.scene1.hotSpots) {
+                return hotspots.scenes.scene1.hotSpots;
+            }
+
+            return [];
+        } catch (error) {
+            console.log("Error loading JSON hotspots:", error);
+            return [];
+        }
+    }
+
     function onDblClick(hs) {
         console.log("onClick", arguments[0]);
     }
@@ -209,7 +231,21 @@
     }
 
     function onClickHotSpot(hs) {
-        console.log("onClick", arguments[0]);
+        console.log("onClickHotSpot", hs);
+
+        // Проверяем, есть ли URL для загрузки новой сцены
+        if (hs.panorama_url) {
+            // Обновляем URL страницы с новыми параметрами
+            let currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('photo', hs.panorama_url);
+            window.history.pushState({}, '', currentUrl);
+
+            // Загружаем новую сцену
+            setSelectPanorama(hs);
+            return true;
+        }
+
+        // Старая логика для JSON конфигураций
         const jsonName = hs['panorama_url']?.split('/')[4];
         if (jsonName) {
             const name = jsonName.split('.')[0];
@@ -252,11 +288,8 @@
         }
     }
 
-
     // Функция для обработки правой кнопки мыши на HotSpot
     function onContextMenuHotSpot(coords, screenCoords, event, hotSpot) {
-        debugger
-
         console.log("Right click on HotSpot:", {
             coords: coords,
             screenCoords: screenCoords,
@@ -264,15 +297,6 @@
             event: event
         });
 
-        // Пример: показать информацию о HotSpot
-        alert(`HotSpot context menu:\n` +
-            `Yaw: ${coords.yaw.toFixed(2)}°\n` +
-            `Pitch: ${coords.pitch.toFixed(2)}°\n` +
-            `Screen: (${screenCoords.x}, ${screenCoords.y})\n` +
-            `HotSpot text: ${hotSpot.text || 'No text'}`);
-
-        // Здесь можно добавить свое контекстное меню
-        // Например, создать и показать кастомное меню
         showCustomContextMenu(screenCoords.x, screenCoords.y, {
             type: 'hotspot',
             data: hotSpot,
@@ -287,13 +311,6 @@
             screenCoords: screenCoords,
             event: event
         });
-        // Пример: показать информацию о точке
-        // alert(`Scene context menu:\n` +
-        //     `Yaw: ${coords.yaw.toFixed(2)}°\n` +
-        //     `Pitch: ${coords.pitch.toFixed(2)}°\n` +
-        //     `Screen: (${screenCoords.x}, ${screenCoords.y})`);
-        // Здесь можно добавить свое контекстное меню
-        // Например, создать и показать кастомное меню
         showCustomContextMenu(screenCoords.x, screenCoords.y, {
             type: 'scene',
             data: coords,
@@ -303,14 +320,11 @@
 
     // Вспомогательная функция для показа кастомного контекстного меню
     function showCustomContextMenu(x, y, data) {
-        debugger
-        // Удаляем старое меню, если есть
         var oldMenu = document.getElementById('custom-context-menu');
         if (oldMenu) {
             oldMenu.remove();
         }
 
-        // Создаем новое меню
         var menu = document.createElement('div');
         menu.id = 'custom-context-menu';
         menu.style.position = 'absolute';
@@ -323,7 +337,6 @@
         menu.style.padding = '5px 0';
         menu.style.minWidth = '150px';
 
-        // Добавляем пункты меню в зависимости от типа
         if (data.type === 'hotspot') {
             menu.innerHTML = `
             <div class="menu-item" onclick="handleHotSpotAction('edit', ${JSON.stringify(data.data).replace(/"/g, '&quot;')})" style="padding: 5px 10px; cursor: pointer;">Edit HotSpot</div>
@@ -342,7 +355,6 @@
 
         document.body.appendChild(menu);
 
-        // Закрываем меню при клике вне его
         setTimeout(function() {
             document.addEventListener('click', function closeMenu(e) {
                 if (!menu.contains(e.target)) {
@@ -369,7 +381,6 @@
 
     function addHotSpotAt(coords) {
         console.log('Add HotSpot at:', coords);
-        // Здесь можно добавить логику создания нового HotSpot
         alert('Add HotSpot at: Yaw=' + coords.yaw.toFixed(2) + ', Pitch=' + coords.pitch.toFixed(2));
     }
 
