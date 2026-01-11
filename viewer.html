@@ -136,6 +136,8 @@
                 imageUrl = photoValue; // Оставляем оригинальный URL для Pannellum
             }
             jsonObj.onClickHotSpot = onClickHotSpot;
+            jsonObj.onDblClick = onDblClick;
+            jsonObj.onClick = onClick;
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
             }
@@ -146,6 +148,8 @@
         else if (infoValue) {
             let jsonObj = getJsonUrlData('/Example/pano360/point_info/' + infoValue);
             jsonObj.onClickHotSpot = onClickHotSpot;
+            jsonObj.onDblClick = onDblClick;
+            jsonObj.onClick = onClick;
 
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
@@ -178,12 +182,22 @@
                 }
             };
             jsonObj.onClickHotSpot = onClickHotSpot;
+            jsonObj.onDblClick = onDblClick;
+            jsonObj.onClick = onClick;
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
             }
             sceneMain = pannellum.viewer('canvas', jsonObj);
             currentScene = 'default';
         }
+    }
+
+    function onDblClick(hs) {
+        debugger
+    }
+
+    function onClick(hs) {
+        debugger
     }
 
     function onClickHotSpot(hs) {
@@ -199,6 +213,8 @@
             window.history.pushState({}, '', currentUrl);
             let jsonObj = getJsonUrlData(hs['panorama_url']);
             jsonObj.onClickHotSpot = onClickHotSpot;
+            jsonObj.onDblClick = onDblClick;
+            jsonObj.onClick = onClick;
             jsonObj['pitch'] = hs['point_pitch'];
             jsonObj['yaw'] = hs['point_yaw'];
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
