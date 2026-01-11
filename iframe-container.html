@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Panorama Viewer - Iframe Container</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .controls {
+            padding: 15px 20px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+
+        input, select, button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button.secondary {
+            background: #95a5a6;
+        }
+
+        button.secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .viewer-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: #000;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .info-panel {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        .hotspot-example {
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+        }
+
+        code {
+            background: #2d3436;
+            color: #dfe6e9;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Panorama Viewer - Iframe Demo</h1>
+    </header>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Panorama URL:</label>
+            <input type="text" id="panoramaUrl" value="https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/04.01.2026/DSCN0021.JPG" style="width: 400px;">
+            <button onclick="loadPanorama()">Load Panorama</button>
+        </div>
+
+        <div class="control-group">
+            <label>HotSpots:</label>
+            <select id="hotspotPreset">
+                <option value="none">No HotSpots</option>
+                <option value="simple">Simple Navigation</option>
+                <option value="custom">Custom HotSpots</option>
+            </select>
+            <button onclick="applyHotSpots()">Apply HotSpots</button>
+            <button onclick="toggleIframeInfo()" class="secondary">Toggle Iframe Info</button>
+            <button onclick="getViewerState()" class="secondary">Get Viewer State</button>
+        </div>
+
+        <div class="hotspot-example">
+            <strong>HotSpot JSON Example:</strong>
+            <code id="hotspotExample">[{"pitch": -10, "yaw": 30, "type": "scene", "text": "Next Scene", "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/04.01.2026/DSCN0033.JPG", "point_pitch": 0, "point_yaw": 0}]</code>
+        </div>
+    </div>
+
+    <div class="viewer-container">
+        <iframe id="panoramaViewer"
+                src="viewer.html"
+                allowfullscreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                referrerpolicy="no-referrer"
+                loading="eager"
+                importance="high"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-top-navigation">
+        </iframe>
+    </div>
+
+    <div class="info-panel">
+        <h3>Iframe Attributes Explained:</h3>
+        <ul>
+            <li><code>allowfullscreen</code> - Allows fullscreen mode</li>
+            <li><code>allow="..."</code> - Permissions for various browser features</li>
+            <li><code>referrerpolicy="no-referrer"</code> - Privacy control</li>
+            <li><code>loading="eager"</code> - Load iframe immediately</li>
+            <li><code>importance="high"</code> - High loading priority</li>
+            <li><code>sandbox="..."</code> - Security restrictions (adjusted for functionality)</li>
+        </ul>
+
+        <div id="viewerState" style="margin-top: 10px; padding: 10px; background: #e9ecef; border-radius: 4px;">
+            Viewer state will appear here...
+        </div>
+    </div>
+</div>
+
+<script>
+    var viewerIframe = document.getElementById('panoramaViewer');
+    var hotspotPresets = {
+        none: [],
+        simple: [
+            {
+                "pitch": -10,
+                "yaw": 30,
+                "type": "scene",
+                "text": "Next Scene",
+                "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/04.01.2026/DSCN0033.JPG",
+                "point_pitch": 0,
+                "point_yaw": 0
+            },
+            {
+                "pitch": 5,
+                "yaw": -45,
+                "type": "info",
+                "text": "Info Point",
+                "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/04.01.2026/DSCN0137.JPG",
+                "point_pitch": 10,
+                "point_yaw": 20
+            }
+        ],
+        custom: [
+            {
+                "pitch": -15,
+                "yaw": 60,
+                "type": "scene",
+                "text": "Scene 1",
+                "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/04.01.2026/DSCN0021.JPG",
+                "point_pitch": -10,
+                "point_yaw": 5
+            },
+            {
+                "pitch": 10,
+                "yaw": -30,
+                "type": "info",
+                "text": "Information",
+                "cssClass": "custom-hotspot"
+            }
+        ]
+    };
+
+    function loadPanorama() {
+        var url = document.getElementById('panoramaUrl').value;
+        if (!url) return;
+
+        viewerIframe.contentWindow.postMessage({
+            type: 'pannellum_control',
+            action: 'loadScene',
+            photo: url
+        }, '*');
+    }
+
+    function applyHotSpots() {
+        var preset = document.getElementById('hotspotPreset').value;
+        var hotspots = hotspotPresets[preset];
+
+        document.getElementById('hotspotExample').textContent = JSON.stringify(hotspots, null, 2);
+
+        var url = document.getElementById('panoramaUrl').value;
+        if (!url) return;
+
+        viewerIframe.contentWindow.postMessage({
+            type: 'pannellum_control',
+            action: 'loadScene',
+            photo: url,
+            hotSpots: hotspots
+        }, '*');
+    }
+
+    function toggleIframeInfo() {
+        viewerIframe.contentWindow.postMessage({
+            type: 'pannellum_control',
+            action: 'toggleInfo'
+        }, '*');
+    }
+
+    function getViewerState() {
+        viewerIframe.contentWindow.postMessage({
+            type: 'pannellum_control',
+            action: 'getState'
+        }, '*');
+    }
+
+    // Обработчик сообщений от iframe
+    window.addEventListener('message', function(event) {
+        // В реальном приложении проверяйте event.origin!
+        // if (event.origin !== 'http://your-domain.com') return;
+
+        if (event.data.type === 'pannellum_navigation') {
+            console.log('Navigation in iframe:', event.data);
+            // Можно обновить URL в адресной строке родителя
+            // window.history.pushState({}, '', '?view=' + encodeURIComponent(event.data.url));
+        }
+
+        if (event.data.type === 'pannellum_state') {
+            document.getElementById('viewerState').innerHTML =
+                '<strong>Viewer State:</strong><br>' +
+                'Current Scene: ' + (event.data.currentScene || 'none') + '<br>' +
+                'Loaded: ' + (event.data.isLoaded ? 'Yes' : 'No');
+        }
+    });
+
+    // Загружаем начальную панораму
+    window.addEventListener('load', function() {
+        setTimeout(loadPanorama, 1000);
+    });
+
+    // Пример обновления URL при навигации внутри iframe
+    function updateParentUrl(viewerUrl) {
+        // Реализуйте по необходимости
+    }
+</script>
+</body>
+</html>
