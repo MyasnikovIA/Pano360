@@ -1,42 +1,30 @@
 {
-  "pitchCam": -9.062613209683,
-  "yawCam": -40.769306922301,
+  "pitchCam": -19.963600397269,
+  "yawCam": -25.681455446514,
   "hotSpots": [
     {
-      "id": 1768205628012,
+      "id": 1768208285472,
       "name": "Без имени",
       "type": "scene",
       "text": "Точка перехода",
-      "pitch": -47.141462433773,
-      "yaw": -154.237446416385,
-      "targetPitch": -29.142195848839,
-      "targetYaw": 110.674079359105,
+      "pitch": -35.090445253874,
+      "yaw": 11.181034149295,
+      "targetPitch": -31.745871170873,
+      "targetYaw": 64.426203167628,
       "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152703.jpg",
-      "createdAt": "2026-01-12T08:13:48.012Z"
+      "createdAt": "2026-01-12T08:58:05.472Z"
     },
     {
-      "id": 1768205658323,
+      "id": 1768208354360,
       "name": "Без имени",
       "type": "scene",
       "text": "Точка перехода",
-      "pitch": -5.808508591426,
-      "yaw": -38.147852629278,
-      "targetPitch": -9.084184398665,
-      "targetYaw": -20.083838844347,
+      "pitch": -5.180746951756,
+      "yaw": -40.579233730885,
+      "targetPitch": -7.868741886317,
+      "targetYaw": -21.147999056255,
       "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152857.jpg",
-      "createdAt": "2026-01-12T08:14:18.323Z"
-    },
-    {
-      "id": 1768205660940,
-      "name": "Без имени",
-      "type": "scene",
-      "text": "Точка перехода",
-      "pitch": -5.808508591426,
-      "yaw": -38.147852629278,
-      "targetPitch": -9.084184398665,
-      "targetYaw": -20.083838844347,
-      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152857.jpg",
-      "createdAt": "2026-01-12T08:14:20.940Z"
+      "createdAt": "2026-01-12T08:59:14.360Z"
     }
   ]
 }
