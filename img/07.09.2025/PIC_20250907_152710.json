@@ -11,7 +11,7 @@
       "yaw": -47.470278787562,
       "targetPitch": 0,
       "targetYaw": 0,
-      "panorama_url": "img/07.09.2025/PIC_20250907_152703.jpg",
+      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152703.jpg",
       "createdAt": "2026-01-12T08:04:01.135Z"
     },
     {
@@ -23,7 +23,7 @@
       "yaw": -47.470278787562,
       "targetPitch": -37.259413664726,
       "targetYaw": 146.477915945489,
-      "panorama_url": "img/07.09.2025/PIC_20250907_152703.jpg",
+      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152703.jpg",
       "createdAt": "2026-01-12T08:04:03.574Z"
     },
     {
@@ -35,7 +35,7 @@
       "yaw": -8.605022382517,
       "targetPitch": -18.140324778242,
       "targetYaw": 3.795153047008,
-      "panorama_url": "img/07.09.2025/PIC_20250907_152722.jpg",
+      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152722.jpg",
       "createdAt": "2026-01-12T08:04:34.710Z"
     },
     {
@@ -47,7 +47,7 @@
       "yaw": -8.605022382517,
       "targetPitch": -18.140324778242,
       "targetYaw": 3.795153047008,
-      "panorama_url": "img/07.09.2025/PIC_20250907_152722.jpg",
+      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152722.jpg",
       "createdAt": "2026-01-12T08:04:38.703Z"
     },
     {
@@ -59,7 +59,7 @@
       "yaw": 52.777978180974,
       "targetPitch": -22.726352582581,
       "targetYaw": -7.423066165499,
-      "panorama_url": "img/07.09.2025/PIC_20250907_152714.jpg",
+      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152714.jpg",
       "createdAt": "2026-01-12T08:05:17.727Z"
     }
   ]

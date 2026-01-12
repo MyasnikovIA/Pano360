@@ -11,7 +11,7 @@
       "yaw": -95.550686963979,
       "targetPitch": -26.615592986301,
       "targetYaw": 174.876704101492,
-      "panorama_url": "img/07.09.2025/PIC_20250907_152736.jpg",
+      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152736.jpg",
       "createdAt": "2026-01-12T07:55:23.369Z"
     },
     {
@@ -23,7 +23,7 @@
       "yaw": -137.397139653499,
       "targetPitch": -24.670233345349,
       "targetYaw": 139.377653938103,
-      "panorama_url": "img/07.09.2025/PIC_20250907_152740.jpg",
+      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/07.09.2025/PIC_20250907_152740.jpg",
       "createdAt": "2026-01-12T07:56:14.882Z"
     }
   ]
