@@ -26,11 +26,186 @@
             height: 100%;
             z-index: 1;
         }
+
+        /* Стили для модального окна */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .url-input-group input {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-success {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .preview-container {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .preview-coordinates {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .preview-coordinates p {
+            margin: 0 0 5px 0;
+            font-weight: bold;
+        }
+
+        #selectedCoordinates {
+            min-height: 60px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .hotspots-list {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .hotspot-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9f9f9;
+        }
+
+        .hotspot-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .hotspot-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .file-input-hidden {
+            display: none;
+        }
+
+        .import-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
     </style>
 </head>
 <body>
 <div id="canvas"></div>
-<!-- Добавить перед закрывающим тегом </body> -->
+
+<!-- Модальное окно для настройки HotSpot -->
 <div id="hotspotModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close">&times;</span>
@@ -45,15 +220,15 @@
             <label for="hotspotUrl">URL панорамы для перехода:</label>
             <div class="url-input-group">
                 <input type="text" id="hotspotUrl" placeholder="Введите URL панорамы">
-                <button id="previewButton" class="btn">Предпросмотр</button>
+                <button id="previewButton" class="btn btn-success">Предпросмотр</button>
             </div>
         </div>
 
         <div id="previewContainer" class="preview-container" style="display: none;">
             <h3>Предпросмотр панорамы</h3>
-            <p>Нажмите на место, куда должен смотреть камера при переходе</p>
+            <p><strong>Инструкция:</strong> Переместите камеру в нужное направление и сделайте <strong>двойной клик</strong> для выбора точки</p>
             <div id="previewIframeContainer" class="iframe-container">
-                <!-- Здесь будет iframe с viewer.html -->
+                <!-- IFRAME с viewer_preview.html будет загружен здесь -->
             </div>
             <div class="preview-coordinates">
                 <p>Выбранные координаты:</p>
@@ -78,8 +253,11 @@
         <div class="modal-actions">
             <button id="saveHotspotButton" class="btn btn-primary">Сохранить точку</button>
             <button id="exportJsonButton" class="btn btn-secondary">Экспорт в JSON</button>
+            <button id="importJsonButton" class="btn btn-warning">Импорт JSON</button>
             <button id="cancelButton" class="btn">Отмена</button>
         </div>
+
+        <div id="importSuccess" class="import-success"></div>
 
         <div id="currentHotspotsList" class="hotspots-list">
             <h3>Текущие точки:</h3>
@@ -87,145 +265,24 @@
         </div>
     </div>
 </div>
-<style>
-    /* Стили для модального окна */
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        z-index: 10000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
 
-    .modal-content {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        width: 80%;
-        max-width: 900px;
-        max-height: 90vh;
-        overflow-y: auto;
-        position: relative;
-    }
+<!-- Скрытый input для импорта файлов -->
+<input type="file" id="jsonFileInput" class="file-input-hidden" accept=".json">
 
-    .close {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 24px;
-        cursor: pointer;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-
-    .form-group input,
-    .form-group select {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-
-    .url-input-group {
-        display: flex;
-        gap: 10px;
-    }
-
-    .url-input-group input {
-        flex: 1;
-    }
-
-    .btn {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .btn-primary {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    .btn-secondary {
-        background-color: #2196F3;
-        color: white;
-    }
-
-    .preview-container {
-        margin: 20px 0;
-        border: 1px solid #ddd;
-        padding: 15px;
-        border-radius: 4px;
-    }
-
-    .iframe-container {
-        width: 100%;
-        height: 300px;
-        border: 1px solid #ccc;
-        margin: 10px 0;
-    }
-
-    .iframe-container iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
-
-    .preview-coordinates {
-        background-color: #f5f5f5;
-        padding: 10px;
-        border-radius: 4px;
-        margin-top: 10px;
-    }
-
-    .modal-actions {
-        display: flex;
-        gap: 10px;
-        margin: 20px 0;
-    }
-
-    .hotspots-list {
-        margin-top: 20px;
-        border-top: 1px solid #eee;
-        padding-top: 20px;
-    }
-
-    .hotspot-item {
-        padding: 10px;
-        border: 1px solid #ddd;
-        margin-bottom: 5px;
-        border-radius: 4px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .hotspot-actions {
-        display: flex;
-        gap: 5px;
-    }
-</style>
 <script>
     var sceneMain = null;
     var currentScene = null;
+    var currentHotspots = [];
+    var currentCoords = null;
+    var selectedPreviewCoords = null;
+    var previewIframe = null;
+    var messageHandlerBound = false;
+    var isInIframe = window.self !== window.top;
 
-    // Заменяем $(document).ready() на DOMContentLoaded
+    // Инициализация при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
         loadInitialScene();
+        initModalHandlers();
     });
 
     function loadInitialScene() {
@@ -253,12 +310,9 @@
                 tempIframe.style.position = 'absolute';
                 tempIframe.style.top = '-1000px';
                 tempIframe.style.left = '-1000px';
-                // Добавляем iframe в DOM, но НЕ устанавливаем src сразу
                 document.body.appendChild(tempIframe);
-                // Устанавливаем src через небольшой таймаут
                 setTimeout(function() {
                     tempIframe.src = photoValue;
-                    // Удаляем iframe через 10 секунд чтобы не засорять DOM
                     setTimeout(function() {
                         if (tempIframe && tempIframe.parentNode) {
                             tempIframe.parentNode.removeChild(tempIframe);
@@ -276,26 +330,23 @@
                 },
                 "scenes": {
                     "scene1": {
-                        //"title": isExternal ? "External Image" : "Image: " + photoValue,
                         "title": "",
                         "panorama": imageUrl,
                         "crossOrigin": isExternal ? undefined : "use-credentials",
                         "autoLoad": true,
                         "yaw": 0,
                         "pitch": 0,
-                        "hotSpots": hotSpots ? hotSpots : []
+                        "hotSpots": hotSpots ? JSON.parse(decodeURIComponent(hotSpots)) : []
                     }
                 }
             };
-            // Дополнительные настройки для внешних изображений
+
             if (isExternal) {
-                // Убеждаемся, что URL начинается с https://
                 var secureUrl = photoValue;
                 if (secureUrl.startsWith('http://')) {
                     secureUrl = secureUrl.replace('http://', 'https://');
                 }
 
-                // Создаем временный iframe для предзагрузки изображения
                 var tempIframe = document.createElement('iframe');
                 tempIframe.style.display = 'none';
                 tempIframe.style.width = '0';
@@ -304,18 +355,12 @@
                 tempIframe.style.position = 'absolute';
                 tempIframe.style.top = '-1000px';
                 tempIframe.style.left = '-1000px';
-
-                // Устанавливаем атрибут sandbox для безопасности
                 tempIframe.sandbox = 'allow-same-origin allow-scripts';
-
-                // Добавляем iframe в DOM
                 document.body.appendChild(tempIframe);
 
-                // Загружаем через HTTPS с небольшим таймаутом
                 setTimeout(function() {
                     tempIframe.src = secureUrl;
                     console.log('Preloading external image via iframe:', secureUrl);
-                    // Удаляем iframe через 10 секунд чтобы не засорять DOM
                     setTimeout(function() {
                         if (tempIframe && tempIframe.parentNode) {
                             tempIframe.parentNode.removeChild(tempIframe);
@@ -323,20 +368,21 @@
                         }
                     }, 10000);
                 }, 100);
-                imageUrl = photoValue; // Оставляем оригинальный URL для Pannellum
+                imageUrl = photoValue;
             }
+
             jsonObj.onClickHotSpot = onClickHotSpot;
             jsonObj.onDblClick = onDblClick;
             jsonObj.onClick = onClick;
             jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
             jsonObj.onContextMenu = onContextMenu;
+
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
             }
             sceneMain = pannellum.viewer('canvas', jsonObj);
             currentScene = photoValue;
         }
-        // Если есть параметр info, загружаем через JSON конфигурацию
         else if (infoValue) {
             let jsonObj = getJsonUrlData('/Example/pano360/point_info/' + infoValue);
             jsonObj.onClickHotSpot = onClickHotSpot;
@@ -351,9 +397,7 @@
             sceneMain = pannellum.viewer('canvas', jsonObj);
             currentScene = infoValue;
         }
-        // Если нет параметров, загружаем изображение по умолчанию
         else {
-            // Веб-путь для изображения по умолчанию
             var defaultImage = 'img/04.01.2026/DSCN0021.JPG';
 
             let jsonObj = {
@@ -396,8 +440,9 @@
             event: event
         });
 
-        // Открываем модальное окно для создания HotSpot
-        openHotSpotModal(coords);
+        if (coords) {
+            openHotSpotModal(coords);
+        }
     }
 
     function onClick(hs) {
@@ -405,7 +450,36 @@
     }
 
     function onClickHotSpot(hs) {
-        console.log("onClick", arguments[0]);
+        console.log("onClickHotSpot", hs);
+
+        // Проверяем, есть ли URL для загрузки новой сцены
+        if (hs.panorama_url) {
+            // Обновляем URL страницы с новыми параметрами
+            let currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('photo', hs.panorama_url);
+            currentUrl.searchParams.delete('hotSpots');
+
+            // Если в iframe, используем postMessage для уведомления родителя
+            if (isInIframe) {
+                try {
+                    window.parent.postMessage({
+                        type: 'pannellum_navigation',
+                        url: currentUrl.toString(),
+                        hotSpot: hs
+                    }, '*');
+                } catch(e) {
+                    console.log('Cannot post message to parent');
+                }
+            }
+
+            window.history.pushState({}, '', currentUrl);
+
+            // Загружаем новую сцену
+            setSelectPanorama(hs);
+            return true;
+        }
+
+        // Старая логика для JSON конфигураций
         const jsonName = hs['panorama_url']?.split('/')[4];
         if (jsonName) {
             const name = jsonName.split('.')[0];
@@ -415,13 +489,31 @@
             } else {
                 currentUrl.searchParams.set('info', hs.panorama_url.split('/')[4]);
             }
+            currentUrl.searchParams.delete('hotSpots');
+
+            // Если в iframe, уведомляем родителя
+            if (isInIframe) {
+                try {
+                    window.parent.postMessage({
+                        type: 'pannellum_navigation',
+                        url: currentUrl.toString(),
+                        hotSpot: hs
+                    }, '*');
+                } catch(e) {
+                    console.log('Cannot post message to parent');
+                }
+            }
+
             window.history.pushState({}, '', currentUrl);
             let jsonObj = getJsonUrlData(hs['panorama_url']);
             jsonObj.onClickHotSpot = onClickHotSpot;
-            jsonObj.onDblClick = onDblClick;
+            jsonObj.onDblClick = isInIframe ? null : onDblClick;
             jsonObj.onClick = onClick;
-            jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
-            jsonObj.onContextMenu = onContextMenu;
+
+            if (!isInIframe) {
+                jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
+                jsonObj.onContextMenu = onContextMenu;
+            }
 
             jsonObj['pitch'] = hs['point_pitch'];
             jsonObj['yaw'] = hs['point_yaw'];
@@ -435,7 +527,6 @@
         return false;
     }
 
-    // Вспомогательные функции
     function getJsonUrlData(url, data) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', url, false);
@@ -448,11 +539,7 @@
         }
     }
 
-
-    // Функция для обработки правой кнопки мыши на HotSpot
     function onContextMenuHotSpot(coords, screenCoords, event, hotSpot) {
-        debugger
-
         console.log("Right click on HotSpot:", {
             coords: coords,
             screenCoords: screenCoords,
@@ -460,15 +547,12 @@
             event: event
         });
 
-        // Пример: показать информацию о HotSpot
         alert(`HotSpot context menu:\n` +
             `Yaw: ${coords.yaw.toFixed(2)}°\n` +
             `Pitch: ${coords.pitch.toFixed(2)}°\n` +
             `Screen: (${screenCoords.x}, ${screenCoords.y})\n` +
             `HotSpot text: ${hotSpot.text || 'No text'}`);
 
-        // Здесь можно добавить свое контекстное меню
-        // Например, создать и показать кастомное меню
         showCustomContextMenu(screenCoords.x, screenCoords.y, {
             type: 'hotspot',
             data: hotSpot,
@@ -476,20 +560,13 @@
         });
     }
 
-    // Функция для обработки правой кнопки мыши на сцене
     function onContextMenu(coords, screenCoords, event) {
         console.log("Right click on scene:", {
             coords: coords,
             screenCoords: screenCoords,
             event: event
         });
-        // Пример: показать информацию о точке
-        // alert(`Scene context menu:\n` +
-        //     `Yaw: ${coords.yaw.toFixed(2)}°\n` +
-        //     `Pitch: ${coords.pitch.toFixed(2)}°\n` +
-        //     `Screen: (${screenCoords.x}, ${screenCoords.y})`);
-        // Здесь можно добавить свое контекстное меню
-        // Например, создать и показать кастомное меню
+
         showCustomContextMenu(screenCoords.x, screenCoords.y, {
             type: 'scene',
             data: coords,
@@ -497,16 +574,12 @@
         });
     }
 
-    // Вспомогательная функция для показа кастомного контекстного меню
     function showCustomContextMenu(x, y, data) {
-        debugger
-        // Удаляем старое меню, если есть
         var oldMenu = document.getElementById('custom-context-menu');
         if (oldMenu) {
             oldMenu.remove();
         }
 
-        // Создаем новое меню
         var menu = document.createElement('div');
         menu.id = 'custom-context-menu';
         menu.style.position = 'absolute';
@@ -519,7 +592,6 @@
         menu.style.padding = '5px 0';
         menu.style.minWidth = '150px';
 
-        // Добавляем пункты меню в зависимости от типа
         if (data.type === 'hotspot') {
             menu.innerHTML = `
             <div class="menu-item" onclick="handleHotSpotAction('edit', ${JSON.stringify(data.data).replace(/"/g, '&quot;')})" style="padding: 5px 10px; cursor: pointer;">Edit HotSpot</div>
@@ -538,7 +610,6 @@
 
         document.body.appendChild(menu);
 
-        // Закрываем меню при клике вне его
         setTimeout(function() {
             document.addEventListener('click', function closeMenu(e) {
                 if (!menu.contains(e.target)) {
@@ -549,7 +620,6 @@
         }, 0);
     }
 
-    // Пример обработчиков действий меню
     function handleHotSpotAction(action, hotSpot) {
         console.log(action + ' HotSpot:', hotSpot);
         alert(action + ' HotSpot: ' + (hotSpot.text || hotSpot.type));
@@ -565,7 +635,6 @@
 
     function addHotSpotAt(coords) {
         console.log('Add HotSpot at:', coords);
-        // Здесь можно добавить логику создания нового HotSpot
         alert('Add HotSpot at: Yaw=' + coords.yaw.toFixed(2) + ', Pitch=' + coords.pitch.toFixed(2));
     }
 
@@ -574,49 +643,49 @@
             sceneMain.lookAt(coords.pitch, coords.yaw, sceneMain.getHfov(), 500);
         }
     }
-    // Переменные для управления состоянием
-    var currentHotspots = [];
-    var currentCoords = null;
-    var selectedPreviewCoords = null;
-    var previewIframe = null;
 
-    // Функция открытия модального окна
+    // ============= ФУНКЦИИ ДЛЯ МОДАЛЬНОГО ОКНА =============
+
     function openHotSpotModal(coords) {
         currentCoords = coords;
         selectedPreviewCoords = null;
 
-        // Показать модальное окно
         var modal = document.getElementById('hotspotModal');
         modal.style.display = 'flex';
 
-        // Очистить поля
         document.getElementById('hotspotName').value = '';
         document.getElementById('hotspotUrl').value = '';
         document.getElementById('hotspotType').value = 'scene';
         document.getElementById('hotspotText').value = '';
         document.getElementById('selectedCoordinates').textContent = 'Не выбрано';
         document.getElementById('previewContainer').style.display = 'none';
+        document.getElementById('importSuccess').style.display = 'none';
 
-        // Загрузить список существующих точек
+        // Очищаем iframe контейнер
+        var iframeContainer = document.getElementById('previewIframeContainer');
+        iframeContainer.innerHTML = '';
+
         loadHotspotsList();
     }
 
-    // Функция закрытия модального окна
     function closeModal() {
         var modal = document.getElementById('hotspotModal');
         modal.style.display = 'none';
 
-        // Уничтожить iframe если он существует
         if (previewIframe) {
             previewIframe.remove();
             previewIframe = null;
         }
+
+        // Удаляем обработчик сообщений при закрытии модального окна
+        if (messageHandlerBound) {
+            window.removeEventListener('message', handlePreviewMessage);
+            messageHandlerBound = false;
+        }
     }
 
-    // Функция загрузки предпросмотра
-    // В edit.html в функции loadPreview() замените создание iframe на:
     function loadPreview() {
-        var url = document.getElementById('hotspotUrl').value;
+        var url = document.getElementById('hotspotUrl').value.trim();
         if (!url) {
             alert('Введите URL панорамы');
             return;
@@ -624,61 +693,85 @@
 
         // Показать контейнер предпросмотра
         document.getElementById('previewContainer').style.display = 'block';
+        document.getElementById('selectedCoordinates').innerHTML = '<em>Загрузка предпросмотра...</em>';
 
         // Создать iframe с viewer_preview.html
         var iframeContainer = document.getElementById('previewIframeContainer');
         iframeContainer.innerHTML = '';
 
+        // Создаем iframe с правильными размерами
         previewIframe = document.createElement('iframe');
+        previewIframe.id = 'previewIframe';
         previewIframe.src = 'viewer_preview.html?photo=' + encodeURIComponent(url);
+        previewIframe.style.width = '100%';
+        previewIframe.style.height = '100%';
+        previewIframe.style.border = 'none';
 
         iframeContainer.appendChild(previewIframe);
 
-        // Добавить обработчик сообщений от iframe
-        window.addEventListener('message', handlePreviewMessage);
+        // Добавить обработчик сообщений от iframe (только один раз)
+        if (!messageHandlerBound) {
+            window.addEventListener('message', handlePreviewMessage);
+            messageHandlerBound = true;
+        }
     }
 
-
     function handlePreviewMessage(event) {
-        var iframe = document.querySelector('#previewIframeContainer iframe');
+        // Проверяем, что сообщение от нашего iframe предпросмотра
+        var iframe = document.getElementById('previewIframe');
         if (!iframe || event.source !== iframe.contentWindow) return;
 
         if (event.data && event.data.type === 'hotspot_preview_coords') {
+            // Сохраняем выбранные координаты
             selectedPreviewCoords = {
                 click: event.data.clickCoords,
                 view: event.data.viewCoords
             };
 
+            // Обновляем отображение координат
             var coordsText = `
-            <strong>Координаты клика:</strong><br>
-            Yaw: ${selectedPreviewCoords.click.yaw.toFixed(2)}°,
-            Pitch: ${selectedPreviewCoords.click.pitch.toFixed(2)}°<br><br>
-            <strong>Направление камеры:</strong><br>
-            Yaw: ${selectedPreviewCoords.view.yaw.toFixed(2)}°,
-            Pitch: ${selectedPreviewCoords.view.pitch.toFixed(2)}°
-        `;
+                <div style="margin-bottom: 8px;">
+                    <strong>Координаты клика:</strong><br>
+                    Yaw: <code>${selectedPreviewCoords.click.yaw.toFixed(2)}°</code>, 
+                    Pitch: <code>${selectedPreviewCoords.click.pitch.toFixed(2)}°</code>
+                </div>
+                <div>
+                    <strong>Направление камеры:</strong><br>
+                    Yaw: <code>${selectedPreviewCoords.view.yaw.toFixed(2)}°</code>, 
+                    Pitch: <code>${selectedPreviewCoords.view.pitch.toFixed(2)}°</code>
+                </div>
+                <div style="margin-top: 8px; color: #4CAF50;">
+                    <strong>✓ Координаты выбраны успешно!</strong>
+                </div>
+            `;
 
             document.getElementById('selectedCoordinates').innerHTML = coordsText;
         }
     }
 
-    // Функция сохранения HotSpot
-    // В edit.html заменяем функцию saveHotspot
     function saveHotspot() {
-        var name = document.getElementById('hotspotName').value;
-        var url = document.getElementById('hotspotUrl').value;
+        var name = document.getElementById('hotspotName').value.trim();
+        var url = document.getElementById('hotspotUrl').value.trim();
         var type = document.getElementById('hotspotType').value;
-        var text = document.getElementById('hotspotText').value;
+        var text = document.getElementById('hotspotText').value.trim();
 
-        // Проверка обязательных полей
         if (!url) {
             alert('URL панорамы обязателен для заполнения');
             return;
         }
 
-        // Создаем объект HotSpot в требуемом формате
+        // Проверяем, что координаты выбраны
+        if (!selectedPreviewCoords) {
+            if (!confirm('Координаты направления камеры не выбраны. Использовать значение по умолчанию (0,0)?')) {
+                return;
+            }
+            selectedPreviewCoords = {
+                view: { pitch: 0, yaw: 0 }
+            };
+        }
+
         var hotspot = {
-            id: Date.now(), // Уникальный ID
+            id: Date.now(),
             name: name || 'Без имени',
             type: type,
             text: text || 'Точка перехода',
@@ -690,27 +783,17 @@
             createdAt: new Date().toISOString()
         };
 
-        // Добавляем в массив точек
         currentHotspots.push(hotspot);
-
-        // Обновляем список точек
         loadHotspotsList();
-
-        // Обновляем текущую сцену с новыми точками
         updateSceneWithHotspots();
-
-        // Сохраняем точки в JSON файл
-        saveHotspotsToJson(hotspot.panorama_url);
+        saveHotspotsToJson(url);
 
         alert('Точка сохранена и JSON файл обновлен!');
     }
 
-
-    // Обновляем функцию updateSceneWithHotspots для правильного формата
     function updateSceneWithHotspots() {
         if (!sceneMain) return;
 
-        // Преобразуем точки в формат Pannellum
         var pannellumHotspots = currentHotspots.map(function(hotspot) {
             return {
                 pitch: hotspot.pitch,
@@ -724,37 +807,26 @@
             };
         });
 
-        // Обновляем hotspots в текущей сцене
-        var scene = sceneMain.getScene();
         sceneMain.removeHotSpot('all');
-
         pannellumHotspots.forEach(function(hotspot, index) {
             sceneMain.addHotSpot(hotspot, "scene1");
         });
     }
 
-    // Функция сохранения точек в JSON файл
     function saveHotspotsToJson(imageUrl) {
         if (currentHotspots.length === 0) return;
 
-        // Извлекаем имя файла из URL
         var fileName = extractFileNameFromUrl(imageUrl);
         if (!fileName) {
             console.error('Не удалось извлечь имя файла из URL:', imageUrl);
             return;
         }
 
-        // Меняем расширение на .json
         var jsonFileName = fileName.replace(/\.[^/.]+$/, "") + ".json";
-
-        // Создаем JSON структуру (просто массив точек)
         var jsonData = JSON.stringify(currentHotspots, null, 2);
-
-        // Создаем Blob и ссылку для скачивания
         var blob = new Blob([jsonData], { type: 'application/json' });
         var url = URL.createObjectURL(blob);
 
-        // Создаем временную ссылку для скачивания
         var a = document.createElement('a');
         a.href = url;
         a.download = jsonFileName;
@@ -762,24 +834,19 @@
         a.click();
         document.body.removeChild(a);
 
-        // Очищаем URL через 1 секунду
         setTimeout(function() {
             URL.revokeObjectURL(url);
         }, 1000);
 
         console.log('JSON файл сохранен как:', jsonFileName);
     }
-    // Функция извлечения имени файла из URL
+
     function extractFileNameFromUrl(url) {
         try {
-            // Убираем параметры запроса
             var urlWithoutParams = url.split('?')[0];
-
-            // Извлекаем имя файла из пути
             var parts = urlWithoutParams.split('/');
             var fileName = parts[parts.length - 1];
 
-            // Проверяем, что есть расширение
             if (!fileName || fileName.indexOf('.') === -1) {
                 return null;
             }
@@ -790,13 +857,13 @@
             return null;
         }
     }
-    // Функция загрузки списка точек
+
     function loadHotspotsList() {
         var container = document.getElementById('hotspotsContainer');
         container.innerHTML = '';
 
         if (currentHotspots.length === 0) {
-            container.innerHTML = '<p>Нет созданных точек</p>';
+            container.innerHTML = '<p style="color: #666; font-style: italic;">Нет созданных точек</p>';
             return;
         }
 
@@ -804,43 +871,65 @@
             var item = document.createElement('div');
             item.className = 'hotspot-item';
             item.innerHTML = `
-            <div>
-                <strong>${hotspot.name}</strong><br>
-                <small>Координаты: Yaw ${hotspot.yaw.toFixed(2)}, Pitch ${hotspot.pitch.toFixed(2)}</small><br>
-                <small>URL: ${hotspot.panorama_url.substring(0, 50)}...</small>
-            </div>
-            <div class="hotspot-actions">
-                <button onclick="editHotspot(${index})" class="btn">✏️</button>
-                <button onclick="deleteHotspot(${index})" class="btn">🗑️</button>
-            </div>
-        `;
+                <div style="flex-grow: 1;">
+                    <div style="font-weight: bold; margin-bottom: 4px;">${hotspot.name}</div>
+                    <div style="font-size: 12px; color: #555; margin-bottom: 2px;">
+                        <strong>Координаты:</strong> Yaw ${hotspot.yaw.toFixed(2)}, Pitch ${hotspot.pitch.toFixed(2)}
+                    </div>
+                    <div style="font-size: 12px; color: #555; margin-bottom: 2px;">
+                        <strong>Направление:</strong> Yaw ${hotspot.targetYaw.toFixed(2)}, Pitch ${hotspot.targetPitch.toFixed(2)}
+                    </div>
+                    <div style="font-size: 11px; color: #777; margin-top: 4px;">
+                        URL: ${hotspot.panorama_url.substring(0, 40)}${hotspot.panorama_url.length > 40 ? '...' : ''}
+                    </div>
+                </div>
+                <div class="hotspot-actions">
+                    <button onclick="editHotspot(${index})" class="btn" style="background: #ffc107; color: black;">✏️</button>
+                    <button onclick="deleteHotspot(${index})" class="btn" style="background: #dc3545; color: white;">🗑️</button>
+                </div>
+            `;
             container.appendChild(item);
         });
     }
 
-    // Функция редактирования точки
     function editHotspot(index) {
         var hotspot = currentHotspots[index];
 
-        // Заполняем поля формы
         document.getElementById('hotspotName').value = hotspot.name;
         document.getElementById('hotspotUrl').value = hotspot.panorama_url;
         document.getElementById('hotspotText').value = hotspot.text;
+        document.getElementById('hotspotType').value = hotspot.type || 'scene';
 
-        // Устанавливаем текущие координаты
         currentCoords = {
             pitch: hotspot.pitch,
             yaw: hotspot.yaw
         };
 
-        // Удаляем точку из массива для пересоздания
-        currentHotspots.splice(index, 1);
+        // Если есть координаты предпросмотра
+        if (hotspot.targetPitch !== undefined && hotspot.targetYaw !== undefined) {
+            selectedPreviewCoords = {
+                view: {
+                    pitch: hotspot.targetPitch,
+                    yaw: hotspot.targetYaw
+                }
+            };
+            var coordsText = `
+                <div style="margin-bottom: 8px;">
+                    <strong>Направление камеры:</strong><br>
+                    Yaw: <code>${selectedPreviewCoords.view.yaw.toFixed(2)}°</code>, 
+                    Pitch: <code>${selectedPreviewCoords.view.pitch.toFixed(2)}°</code>
+                </div>
+                <div style="color: #666; font-size: 12px;">
+                    (загружено из сохранённой точки)
+                </div>
+            `;
+            document.getElementById('selectedCoordinates').innerHTML = coordsText;
+        }
 
-        // Обновляем список
+        currentHotspots.splice(index, 1);
         loadHotspotsList();
     }
 
-    // Функция удаления точки
     function deleteHotspot(index) {
         if (confirm('Удалить эту точку?')) {
             currentHotspots.splice(index, 1);
@@ -849,36 +938,100 @@
         }
     }
 
-
-    // Обновляем функцию экспорта в JSON
     function exportToJson() {
         if (currentHotspots.length === 0) {
             alert('Нет точек для экспорта');
             return;
         }
 
-        // Получаем имя файла из текущей сцены
         var imageUrl = '';
-
-        // Пытаемся получить URL текущей панорамы
         if (currentScene && currentScene !== 'default') {
             imageUrl = currentScene;
         } else if (currentHotspots.length > 0) {
-            // Берем URL из первой точки
             imageUrl = currentHotspots[0].panorama_url;
         }
 
         if (!imageUrl) {
-            // Если не нашли URL, используем дефолтное имя
             var jsonString = JSON.stringify(currentHotspots, null, 2);
             downloadJsonFile(jsonString, 'hotspots_export.json');
             return;
         }
 
-        // Сохраняем с правильным именем
         saveHotspotsToJson(imageUrl);
     }
-    // Вспомогательная функция для скачивания JSON файла
+
+    function importJson() {
+        document.getElementById('jsonFileInput').click();
+    }
+
+    function handleJsonFileSelect(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var importedData = JSON.parse(e.target.result);
+                var hotspotsArray = [];
+
+                // Проверяем формат данных
+                if (Array.isArray(importedData)) {
+                    // Это уже массив точек
+                    hotspotsArray = importedData;
+                } else if (importedData.hotspots && Array.isArray(importedData.hotspots)) {
+                    // Это объект с полем hotspots
+                    hotspotsArray = importedData.hotspots;
+                } else {
+                    throw new Error('Некорректный формат JSON файла');
+                }
+
+                // Проверяем структуру точек
+                if (hotspotsArray.length > 0) {
+                    var firstHotspot = hotspotsArray[0];
+                    if (!firstHotspot.pitch || !firstHotspot.yaw || !firstHotspot.panorama_url) {
+                        throw new Error('Некорректная структура точек в JSON файле');
+                    }
+                }
+
+                // Объединяем с существующими точками (исключая дубликаты по ID)
+                var existingIds = currentHotspots.map(h => h.id);
+                var newHotspots = hotspotsArray.filter(h => !existingIds.includes(h.id));
+
+                currentHotspots = currentHotspots.concat(newHotspots);
+                loadHotspotsList();
+                updateSceneWithHotspots();
+
+                // Показываем сообщение об успехе
+                var successDiv = document.getElementById('importSuccess');
+                successDiv.innerHTML = `
+                    <strong>✓ Импорт успешно завершен!</strong><br>
+                    Загружено ${newHotspots.length} новых точек (всего: ${currentHotspots.length})
+                `;
+                successDiv.style.display = 'block';
+
+                // Автоматически скрываем сообщение через 5 секунд
+                setTimeout(function() {
+                    successDiv.style.display = 'none';
+                }, 5000);
+
+                console.log('Импортировано точек:', newHotspots.length);
+
+            } catch (error) {
+                alert('Ошибка при чтении JSON файла: ' + error.message);
+                console.error('Import error:', error);
+            }
+        };
+
+        reader.onerror = function() {
+            alert('Ошибка при чтении файла');
+        };
+
+        reader.readAsText(file);
+
+        // Сбрасываем input для возможности повторного выбора того же файла
+        event.target.value = '';
+    }
+
     function downloadJsonFile(jsonData, fileName) {
         var blob = new Blob([jsonData], { type: 'application/json' });
         var url = URL.createObjectURL(blob);
@@ -895,10 +1048,7 @@
         }, 1000);
     }
 
-
-
-    // Инициализация обработчиков событий при загрузке страницы
-    document.addEventListener('DOMContentLoaded', function() {
+    function initModalHandlers() {
         // Кнопка предпросмотра
         document.getElementById('previewButton').addEventListener('click', loadPreview);
 
@@ -908,11 +1058,17 @@
         // Кнопка экспорта
         document.getElementById('exportJsonButton').addEventListener('click', exportToJson);
 
+        // Кнопка импорта
+        document.getElementById('importJsonButton').addEventListener('click', importJson);
+
         // Кнопка отмены
         document.getElementById('cancelButton').addEventListener('click', closeModal);
 
         // Кнопка закрытия модального окна
         document.querySelector('.close').addEventListener('click', closeModal);
+
+        // Обработчик выбора файла для импорта
+        document.getElementById('jsonFileInput').addEventListener('change', handleJsonFileSelect);
 
         // Закрытие модального окна при клике вне его
         document.getElementById('hotspotModal').addEventListener('click', function(e) {
@@ -920,41 +1076,6 @@
                 closeModal();
             }
         });
-
-        // Модифицируем существующий onDblClick
-        window.onDblClick = function(coords, screenCoords, event) {
-            console.log("Double click on scene:", {
-                coords: coords,
-                screenCoords: screenCoords,
-                event: event
-            });
-
-            // Открываем модальное окно для создания HotSpot
-            openHotSpotModal(coords);
-        };
-    });
-    // Функция для загрузки существующих точек из JSON файла
-    function loadExistingHotspotsFromJson(imageUrl) {
-        if (!imageUrl) return;
-
-        var fileName = extractFileNameFromUrl(imageUrl);
-        if (!fileName) return;
-
-        var jsonFileName = fileName.replace(/\.[^/.]+$/, "") + ".json";
-
-        // В реальном приложении здесь был бы AJAX запрос для загрузки файла
-        // Для демонстрации покажем сообщение
-        console.log('Попытка загрузить JSON файл:', jsonFileName);
-        debugger
-        // В реальной реализации нужно сделать:
-        // fetch(jsonFileName)
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         currentHotspots = data;
-        //         loadHotspotsList();
-        //         updateSceneWithHotspots();
-        //     })
-        //     .catch(error => console.log('JSON файл не найден:', error));
     }
 </script>
 </body>
