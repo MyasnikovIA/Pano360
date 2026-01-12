@@ -263,6 +263,7 @@
     // Функция для загрузки hotspots из JSON файла без кэширования
     async function loadHotSpotsFromJson(jsonUrl) {
         try {
+            debugger
             // Добавляем параметр для предотвращения кэширования JSON
             const timestamp = new Date().getTime();
             const jsonUrlWithCacheBust = jsonUrl + (jsonUrl.includes('?') ? '&' : '?') + '_nocache=' + timestamp;
