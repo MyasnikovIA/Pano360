@@ -361,7 +361,7 @@
                 headers: {
                     'Accept': 'application/json'
                 },
-                cache: 'force-cache' // Используем кэш для производительности
+                cache: 'force-cache'
             });
 
             if (!response.ok) {
@@ -382,7 +382,7 @@
             return [];
         } catch (error) {
             console.log("Error loading JSON hotspots:", error);
-            return [];
+            throw error; // Пробрасываем ошибку дальше
         }
     }
 
