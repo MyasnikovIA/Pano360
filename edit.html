@@ -972,6 +972,45 @@
         //saveHotspotsToJson(currentScene);
         // alert('Точка сохранена и JSON файл обновлен!');
     }
+    function updateSceneWithHotspots() {
+        if (!sceneMain) return;
+
+        // Получаем текущее направление камеры
+        var cameraPitch = 0;
+        var cameraYaw = 0;
+
+        if (sceneMain && typeof sceneMain.getPitch === 'function' && typeof sceneMain.getYaw === 'function') {
+            try {
+                cameraPitch = sceneMain.getPitch();
+                cameraYaw = sceneMain.getYaw();
+            } catch (e) {
+                console.error('Ошибка при получении направления камеры:', e);
+            }
+        }
+
+        // Преобразуем hotspots в формат Pannellum
+        var pannellumHotspots = currentHotspots.map(function(hotspot) {
+            return {
+                pitch: hotspot.pitch,
+                yaw: hotspot.yaw,
+                type: hotspot.type || "scene",
+                text: hotspot.text || "Переход",
+                sceneId: "scene1",
+                panorama_url: hotspot.panorama_url,
+                point_pitch: hotspot.targetPitch || 0,
+                point_yaw: hotspot.targetYaw || 0
+            };
+        });
+
+        sceneMain.removeHotSpot('all');
+        pannellumHotspots.forEach(function(hotspot, index) {
+            sceneMain.addHotSpot(hotspot, "scene1");
+        });
+
+        console.log("Scene updated with " + currentHotspots.length + " hotspots.");
+        console.log("Current camera direction: Pitch=" + cameraPitch.toFixed(2) + "°, Yaw=" + cameraYaw.toFixed(2) + "°");
+    }
+
     function saveHotspotsToJson(imageUrl) {
         if (currentHotspots.length === 0) return;
 
@@ -1014,70 +1053,6 @@
 
         console.log('JSON файл сохранен как:', jsonFileName);
         alert('Hotspots сохранены в файл: ' + jsonFileName);
-    }
-    function updateSceneWithHotspots() {
-        if (!sceneMain) return;
-
-        // Получаем текущее направление камеры
-        var cameraPitch = 0;
-        var cameraYaw = 0;
-
-        if (sceneMain && typeof sceneMain.getPitch === 'function' && typeof sceneMain.getYaw === 'function') {
-            try {
-                cameraPitch = sceneMain.getPitch();
-                cameraYaw = sceneMain.getYaw();
-            } catch (e) {
-                console.error('Ошибка при получении направления камеры:', e);
-            }
-        }
-        // Преобразуем hotspots в формат Pannellum
-        var pannellumHotspots = currentHotspots.map(function(hotspot) {
-            return {
-                pitch: hotspot.pitch,
-                yaw: hotspot.yaw,
-                type: hotspot.type || "scene",
-                text: hotspot.text || "Переход",
-                sceneId: "scene1",
-                panorama_url: hotspot.panorama_url,
-                point_pitch: hotspot.targetPitch || 0,
-                point_yaw: hotspot.targetYaw || 0
-            };
-        });
-
-        sceneMain.removeHotSpot('all');
-        pannellumHotspots.forEach(function(hotspot, index) {
-            sceneMain.addHotSpot(hotspot, "scene1");
-        });
-
-        console.log("Updated scene with hotspots. Camera direction: Pitch=" + cameraPitch.toFixed(2) + ", Yaw=" + cameraYaw.toFixed(2));
-    }
-
-    function saveHotspotsToJson(imageUrl) {
-        if (currentHotspots.length === 0) return;
-
-        var fileName = extractFileNameFromUrl(imageUrl);
-        if (!fileName) {
-            console.error('Не удалось извлечь имя файла из URL:', imageUrl);
-            return;
-        }
-
-        var jsonFileName = getExportFileName();
-        var jsonData = JSON.stringify(currentHotspots, null, 2);
-        var blob = new Blob([jsonData], { type: 'application/json' });
-        var url = URL.createObjectURL(blob);
-
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = jsonFileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        setTimeout(function() {
-            URL.revokeObjectURL(url);
-        }, 1000);
-
-        console.log('JSON файл сохранен как:', jsonFileName);
     }
 
     function extractFileNameFromUrl(url) {
@@ -1217,14 +1192,41 @@
             alert('Нет точек для экспорта');
             return;
         }
-        if (currentScene && currentScene !== 'default') {
-            saveHotspotsToJson(currentScene);
-        } else {
-            var jsonString = JSON.stringify(currentHotspots, null, 2);
-            downloadJsonFile(jsonString, getExportFileName());
-        }
-    }
 
+        // Получаем URL текущей сцены
+        var cameraPitch = 0;
+        var cameraYaw = 0;
+        if (sceneMain && typeof sceneMain.getPitch === 'function' && typeof sceneMain.getYaw === 'function') {
+            try {
+                cameraPitch = sceneMain.getPitch();
+                cameraYaw = sceneMain.getYaw();
+                console.log("Current camera direction: Pitch=" + cameraPitch + ", Yaw=" + cameraYaw);
+            } catch (e) {
+                console.error('Ошибка при получении направления камеры:', e);
+            }
+        }
+        var jsonData = {
+            pitchCam: parseFloat(cameraPitch.toFixed(12)),
+            yawCam: parseFloat(cameraYaw.toFixed(12)),
+            hotSpots: currentHotspots.map(function(hotspot) {
+                return {
+                    id: hotspot.id || Date.now(),
+                    name: hotspot.name || 'Без имени',
+                    type: hotspot.type || "scene",
+                    text: hotspot.text || "Переход",
+                    pitch: parseFloat(hotspot.pitch.toFixed(12)),
+                    yaw: parseFloat(hotspot.yaw.toFixed(12)),
+                    targetPitch: parseFloat((hotspot.targetPitch || 0).toFixed(12)),
+                    targetYaw: parseFloat((hotspot.targetYaw || 0).toFixed(12)),
+                    panorama_url: hotspot.panorama_url,
+                    createdAt: hotspot.createdAt || new Date().toISOString()
+                };
+            })
+        };
+
+        var jsonString = JSON.stringify(jsonData, null, 2);
+        downloadJsonFile(jsonString, getExportFileName());
+    }
     function importJson() {
         if (isInIframe) return; // Не импортируем в iframe
         document.getElementById('jsonFileInput').click();
@@ -1241,22 +1243,34 @@
             try {
                 var importedData = JSON.parse(e.target.result);
                 var hotspotsArray = [];
+                var cameraPitch = 0;
+                var cameraYaw = 0;
 
-                // Проверяем формат данных
-                if (Array.isArray(importedData)) {
-                    // Это уже массив точек
+                console.log("Importing JSON data:", importedData);
+
+                // Проверяем правильный формат (как DSCN0021.JSON)
+                if (importedData && importedData.hotSpots && Array.isArray(importedData.hotSpots)) {
+                    hotspotsArray = importedData.hotSpots;
+                    if (importedData.pitchCam !== undefined) {
+                        cameraPitch = importedData.pitchCam;
+                    }
+                    if (importedData.yawCam !== undefined) {
+                        cameraYaw = importedData.yawCam;
+                    }
+                }
+                // Проверяем старый формат для обратной совместимости
+                else if (Array.isArray(importedData)) {
                     hotspotsArray = importedData;
                 } else if (importedData.hotspots && Array.isArray(importedData.hotspots)) {
-                    // Это объект с полем hotspots
                     hotspotsArray = importedData.hotspots;
                 } else {
-                    throw new Error('Некорректный формат JSON файла');
+                    throw new Error('Некорректный формат JSON файла. Ожидается объект с полем hotSpots');
                 }
 
                 // Проверяем структуру точек
                 if (hotspotsArray.length > 0) {
                     var firstHotspot = hotspotsArray[0];
-                    if (!firstHotspot.pitch || !firstHotspot.yaw || !firstHotspot.panorama_url) {
+                    if (firstHotspot.pitch === undefined || firstHotspot.yaw === undefined || !firstHotspot.panorama_url) {
                         throw new Error('Некорректная структура точек в JSON файле');
                     }
                 }
@@ -1265,16 +1279,36 @@
                 var existingIds = currentHotspots.map(h => h.id);
                 var newHotspots = hotspotsArray.filter(h => !existingIds.includes(h.id));
 
+                // Обрабатываем точки без ID
+                newHotspots.forEach(function(hotspot) {
+                    if (!hotspot.id) {
+                        hotspot.id = Date.now() + Math.floor(Math.random() * 1000);
+                    }
+                    if (!hotspot.createdAt) {
+                        hotspot.createdAt = new Date().toISOString();
+                    }
+                });
+
                 currentHotspots = currentHotspots.concat(newHotspots);
                 loadHotspotsList();
                 updateSceneWithHotspots();
 
+                // Устанавливаем направление камеры если оно было в JSON
+                if (cameraPitch !== 0 || cameraYaw !== 0) {
+                    if (sceneMain) {
+                        sceneMain.lookAt(cameraPitch, cameraYaw, sceneMain.getHfov(), 1000);
+                    }
+                }
+
                 // Показываем сообщение об успехе
                 var successDiv = document.getElementById('importSuccess');
                 successDiv.innerHTML = `
-                    <strong>✓ Импорт успешно завершен!</strong><br>
-                    Загружено ${newHotspots.length} новых точек (всего: ${currentHotspots.length})
-                `;
+                <strong>✓ Импорт успешно завершен!</strong><br>
+                Загружено ${newHotspots.length} новых точек (всего: ${currentHotspots.length})
+                ${cameraPitch !== 0 || cameraYaw !== 0 ?
+                    '<br>Направление камеры: Pitch=' + cameraPitch.toFixed(2) + '°, Yaw=' + cameraYaw.toFixed(2) + '°' :
+                    ''}
+            `;
                 successDiv.style.display = 'block';
 
                 // Автоматически скрываем сообщение через 5 секунд
@@ -1282,7 +1316,7 @@
                     successDiv.style.display = 'none';
                 }, 5000);
 
-                console.log('Импортировано точек:', newHotspots.length);
+                console.log('Импортировано точек:', newHotspots.length, 'Camera:', cameraPitch, cameraYaw);
 
             } catch (error) {
                 alert('Ошибка при чтении JSON файла: ' + error.message);

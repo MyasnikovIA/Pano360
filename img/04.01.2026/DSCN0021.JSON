@@ -1,18 +1,30 @@
 {
-  "pitchCam": -51.94936932986467,
-  "yawCam": -30.061248352436216,
+  "pitchCam": -35.005673133319,
+  "yawCam": 32.44908498641,
   "hotSpots": [
     {
       "id": 1768190678294,
       "name": "Scene2",
       "type": "scene",
-      "text": "Сцена2",
-      "pitch": -51.94936932986467,
-      "yaw": -30.061248352436216,
-      "targetPitch": -3.878206415633553,
-      "targetYaw": -121.85744616624191,
+      "text": "Сцена2---",
+      "pitch": -51.949369329865,
+      "yaw": -30.061248352436,
+      "targetPitch": -3.878206415634,
+      "targetYaw": -121.857446166242,
       "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/11.01.2026/DSCN0150.JPG",
       "createdAt": "2026-01-12T04:04:38.294Z"
+    },
+    {
+      "id": 1768199230090,
+      "name": "Pos2",
+      "type": "scene",
+      "text": "Pos__2",
+      "pitch": -23.592821277364,
+      "yaw": 50.010774000501,
+      "targetPitch": 18.773217565171,
+      "targetYaw": 33.670913187902,
+      "panorama_url": "https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/11.01.2026/DSCN0150.JPG",
+      "createdAt": "2026-01-12T06:27:10.090Z"
     }
   ]
 }
