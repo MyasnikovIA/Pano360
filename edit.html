@@ -287,7 +287,6 @@
                 e.preventDefault();
             });
         }
-
         loadInitialScene();
         initModalHandlers();
     });
@@ -822,10 +821,49 @@
         currentHotspots.push(hotspot);
         loadHotspotsList();
         updateSceneWithHotspots();
-        // saveHotspotsToJson(url);
+        // Исправлено: передаем текущую сцену (родительскую), а не URL новой сцены
+        //saveHotspotsToJson(currentScene);
         // alert('Точка сохранена и JSON файл обновлен!');
     }
+    function saveHotspotsToJson(parentSceneUrl) {
+        if (currentHotspots.length === 0) return;
 
+        // Исправлено: получаем имя файла из родительской сцены, а не из URL новой сцены
+        var fileName = extractFileNameFromUrl(parentSceneUrl);
+        if (!fileName) {
+            console.error('Не удалось извлечь имя файла из родительской сцены:', parentSceneUrl);
+
+            // Пробуем получить имя из текущего URL если parentSceneUrl не содержит имени файла
+            var currentUrl = new URL(window.location.href);
+            var photoValue = currentUrl.searchParams.get('photo');
+            if (photoValue) {
+                fileName = extractFileNameFromUrl(photoValue);
+            }
+
+            if (!fileName) {
+                // Если все еще не удалось, используем имя по умолчанию
+                fileName = 'current_scene';
+            }
+        }
+
+        var jsonFileName = fileName.replace(/\.[^/.]+$/, "") + ".json";
+        var jsonData = JSON.stringify(currentHotspots, null, 2);
+        var blob = new Blob([jsonData], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = jsonFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(function() {
+            URL.revokeObjectURL(url);
+        }, 1000);
+
+        console.log('JSON файл сохранен как:', jsonFileName, 'для сцены:', parentSceneUrl);
+    }
     function updateSceneWithHotspots() {
         if (!sceneMain) return;
 
@@ -857,7 +895,7 @@
             return;
         }
 
-        var jsonFileName = fileName.replace(/\.[^/.]+$/, "") + ".json";
+        var jsonFileName = getExportFileName();
         var jsonData = JSON.stringify(currentHotspots, null, 2);
         var blob = new Blob([jsonData], { type: 'application/json' });
         var url = URL.createObjectURL(blob);
@@ -977,28 +1015,48 @@
         }
     }
 
+    function getExportFileName() {
+        var panoramaUrl = '';
+
+        // Получаем URL текущей панорамы из конфигурации sceneMain
+        if (sceneMain && typeof sceneMain.getConfig === 'function') {
+            try {
+                var config = sceneMain.getConfig();
+                if (config && config.scenes && config.scenes.scene1 && config.scenes.scene1.panorama) {
+                    panoramaUrl = config.scenes.scene1.panorama;
+                } else if (config && config.panorama) {
+                    panoramaUrl = config.panorama;
+                }
+            } catch (e) {
+                console.error('Ошибка при получении конфигурации:', e);
+            }
+        }
+        let fileName = '';
+        if (panoramaUrl) {
+            // Получаем последнюю часть URL (имя файла)
+            let urlParts = panoramaUrl.split('/');
+            fileName = urlParts[urlParts.length - 1];
+            fileName = fileName.split('?')[0];
+        }
+        if (!fileName) {
+            return 'hotspots_export.json';
+        }
+        let baseName = fileName.replace(/\.[^/.]+$/, "");
+        return baseName + ".JSON";
+    }
+
     function exportToJson() {
         if (isInIframe) return; // Не экспортируем в iframe
-
         if (currentHotspots.length === 0) {
             alert('Нет точек для экспорта');
             return;
         }
-
-        var imageUrl = '';
         if (currentScene && currentScene !== 'default') {
-            imageUrl = currentScene;
-        } else if (currentHotspots.length > 0) {
-            imageUrl = currentHotspots[0].panorama_url;
-        }
-
-        if (!imageUrl) {
+            saveHotspotsToJson(currentScene);
+        } else {
             var jsonString = JSON.stringify(currentHotspots, null, 2);
-            downloadJsonFile(jsonString, 'hotspots_export.json');
-            return;
+            downloadJsonFile(jsonString, getExportFileName());
         }
-
-        saveHotspotsToJson(imageUrl);
     }
 
     function importJson() {
