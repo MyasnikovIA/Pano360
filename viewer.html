@@ -55,6 +55,13 @@
         let params = new URLSearchParams(document.location.search);
         let infoValue = params.get('info');
         let photoValue = params.get('photo');
+        if (photoValue && photoValue.indexOf('\\') != -1) {
+            photoValue = photoValue.replaceAll('\\','/');
+        }
+        let hotSpots = params.get('hotSpots');
+        if (hotSpots && hotSpots.indexOf('\\') != -1) {
+            hotSpots = hotSpots.replaceAll('\\','/');
+        }
         let canvas = document.getElementById('canvas');
         canvas.style.width = '100%';
         canvas.style.height = '100%';
