@@ -281,6 +281,13 @@
 
     // Инициализация при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
+        // Предотвращаем стандартное контекстное меню на всей странице если не в iframe
+        if (!isInIframe) {
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+        }
+
         loadInitialScene();
         initModalHandlers();
     });
@@ -323,8 +330,8 @@
             }
             let jsonObj = {
                 "hotSpotDebug": false,
-                "hotPointDebug": true,
-                "sceneFadeDuration": 1000,
+                "hotPointDebug": !isInIframe, // Отключаем отладку точек в iframe
+                "sceneFadeDuration": isInIframe ? 500 : 1000, // Уменьшаем длительность в iframe
                 "default": {
                     "firstScene": "scene1"
                 },
@@ -334,8 +341,8 @@
                         "panorama": imageUrl,
                         "crossOrigin": isExternal ? undefined : "use-credentials",
                         "autoLoad": true,
-                        "yaw": 0,
-                        "pitch": 0,
+                        "yaw": (hotSpot && hotSpot.point_yaw !== undefined) ? hotSpot.point_yaw : 0,
+                        "pitch": (hotSpot && hotSpot.point_pitch !== undefined) ? hotSpot.point_pitch : 0,
                         "hotSpots": hotSpots ? JSON.parse(decodeURIComponent(hotSpots)) : []
                     }
                 }
@@ -372,10 +379,14 @@
             }
 
             jsonObj.onClickHotSpot = onClickHotSpot;
-            jsonObj.onDblClick = onDblClick;
+            jsonObj.onDblClick = isInIframe ? null : onDblClick; // Отключаем двойной клик в iframe
             jsonObj.onClick = onClick;
-            jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
-            jsonObj.onContextMenu = onContextMenu;
+
+            // Отключаем контекстное меню в iframe режиме
+            if (!isInIframe) {
+                jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
+                jsonObj.onContextMenu = onContextMenu;
+            }
 
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
@@ -386,10 +397,14 @@
         else if (infoValue) {
             let jsonObj = getJsonUrlData('/Example/pano360/point_info/' + infoValue);
             jsonObj.onClickHotSpot = onClickHotSpot;
-            jsonObj.onDblClick = onDblClick;
+            jsonObj.onDblClick = isInIframe ? null : onDblClick; // Отключаем двойной клик в iframe
             jsonObj.onClick = onClick;
-            jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
-            jsonObj.onContextMenu = onContextMenu;
+
+            // Отключаем контекстное меню в iframe режиме
+            if (!isInIframe) {
+                jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
+                jsonObj.onContextMenu = onContextMenu;
+            }
 
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
@@ -402,8 +417,8 @@
 
             let jsonObj = {
                 "hotSpotDebug": false,
-                "hotPointDebug": true,
-                "sceneFadeDuration": 1000,
+                "hotPointDebug": !isInIframe, // Отключаем отладку точек в iframe
+                "sceneFadeDuration": isInIframe ? 500 : 1000, // Уменьшаем длительность в iframe
                 "default": {
                     "firstScene": "scene1"
                 },
@@ -420,10 +435,14 @@
                 }
             };
             jsonObj.onClickHotSpot = onClickHotSpot;
-            jsonObj.onDblClick = onDblClick;
+            jsonObj.onDblClick = isInIframe ? null : onDblClick; // Отключаем двойной клик в iframe
             jsonObj.onClick = onClick;
-            jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
-            jsonObj.onContextMenu = onContextMenu;
+
+            // Отключаем контекстное меню в iframe режиме
+            if (!isInIframe) {
+                jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
+                jsonObj.onContextMenu = onContextMenu;
+            }
 
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
@@ -434,6 +453,8 @@
     }
 
     function onDblClick(coords, screenCoords, event) {
+        if (isInIframe) return; // Не обрабатываем двойной клик в iframe
+
         console.log("Double click on scene:", {
             coords: coords,
             screenCoords: screenCoords,
@@ -507,7 +528,7 @@
             window.history.pushState({}, '', currentUrl);
             let jsonObj = getJsonUrlData(hs['panorama_url']);
             jsonObj.onClickHotSpot = onClickHotSpot;
-            jsonObj.onDblClick = isInIframe ? null : onDblClick;
+            jsonObj.onDblClick = isInIframe ? null : onDblClick; // Отключаем двойной клик в iframe
             jsonObj.onClick = onClick;
 
             if (!isInIframe) {
@@ -540,6 +561,8 @@
     }
 
     function onContextMenuHotSpot(coords, screenCoords, event, hotSpot) {
+        if (isInIframe) return; // Не обрабатываем контекстное меню в iframe
+
         console.log("Right click on HotSpot:", {
             coords: coords,
             screenCoords: screenCoords,
@@ -561,6 +584,8 @@
     }
 
     function onContextMenu(coords, screenCoords, event) {
+        if (isInIframe) return; // Не обрабатываем контекстное меню в iframe
+
         console.log("Right click on scene:", {
             coords: coords,
             screenCoords: screenCoords,
@@ -575,6 +600,8 @@
     }
 
     function showCustomContextMenu(x, y, data) {
+        if (isInIframe) return; // Не показываем контекстное меню в iframe
+
         var oldMenu = document.getElementById('custom-context-menu');
         if (oldMenu) {
             oldMenu.remove();
@@ -621,11 +648,13 @@
     }
 
     function handleHotSpotAction(action, hotSpot) {
+        if (isInIframe) return; // Не обрабатываем действия в iframe
         console.log(action + ' HotSpot:', hotSpot);
         alert(action + ' HotSpot: ' + (hotSpot.text || hotSpot.type));
     }
 
     function copyCoords(coords) {
+        if (isInIframe) return; // Не копируем координаты в iframe
         var text = `Yaw: ${coords.yaw.toFixed(2)}, Pitch: ${coords.pitch.toFixed(2)}`;
         navigator.clipboard.writeText(text).then(function() {
             console.log('Coordinates copied to clipboard:', text);
@@ -634,6 +663,7 @@
     }
 
     function addHotSpotAt(coords) {
+        if (isInIframe) return; // Не добавляем точки в iframe
         console.log('Add HotSpot at:', coords);
         alert('Add HotSpot at: Yaw=' + coords.yaw.toFixed(2) + ', Pitch=' + coords.pitch.toFixed(2));
     }
@@ -647,6 +677,8 @@
     // ============= ФУНКЦИИ ДЛЯ МОДАЛЬНОГО ОКНА =============
 
     function openHotSpotModal(coords) {
+        if (isInIframe) return; // Не открываем модальное окно в iframe
+
         currentCoords = coords;
         selectedPreviewCoords = null;
 
@@ -685,6 +717,8 @@
     }
 
     function loadPreview() {
+        if (isInIframe) return; // Не загружаем предпросмотр в iframe
+
         var url = document.getElementById('hotspotUrl').value.trim();
         if (!url) {
             alert('Введите URL панорамы');
@@ -732,12 +766,12 @@
             var coordsText = `
                 <div style="margin-bottom: 8px;">
                     <strong>Координаты клика:</strong><br>
-                    Yaw: <code>${selectedPreviewCoords.click.yaw.toFixed(2)}°</code>, 
+                    Yaw: <code>${selectedPreviewCoords.click.yaw.toFixed(2)}°</code>,
                     Pitch: <code>${selectedPreviewCoords.click.pitch.toFixed(2)}°</code>
                 </div>
                 <div>
                     <strong>Направление камеры:</strong><br>
-                    Yaw: <code>${selectedPreviewCoords.view.yaw.toFixed(2)}°</code>, 
+                    Yaw: <code>${selectedPreviewCoords.view.yaw.toFixed(2)}°</code>,
                     Pitch: <code>${selectedPreviewCoords.view.pitch.toFixed(2)}°</code>
                 </div>
                 <div style="margin-top: 8px; color: #4CAF50;">
@@ -750,6 +784,8 @@
     }
 
     function saveHotspot() {
+        if (isInIframe) return; // Не сохраняем точки в iframe
+
         var name = document.getElementById('hotspotName').value.trim();
         var url = document.getElementById('hotspotUrl').value.trim();
         var type = document.getElementById('hotspotType').value;
@@ -786,9 +822,8 @@
         currentHotspots.push(hotspot);
         loadHotspotsList();
         updateSceneWithHotspots();
-        saveHotspotsToJson(url);
-
-        alert('Точка сохранена и JSON файл обновлен!');
+        // saveHotspotsToJson(url);
+        // alert('Точка сохранена и JSON файл обновлен!');
     }
 
     function updateSceneWithHotspots() {
@@ -893,6 +928,8 @@
     }
 
     function editHotspot(index) {
+        if (isInIframe) return; // Не редактируем точки в iframe
+
         var hotspot = currentHotspots[index];
 
         document.getElementById('hotspotName').value = hotspot.name;
@@ -916,7 +953,7 @@
             var coordsText = `
                 <div style="margin-bottom: 8px;">
                     <strong>Направление камеры:</strong><br>
-                    Yaw: <code>${selectedPreviewCoords.view.yaw.toFixed(2)}°</code>, 
+                    Yaw: <code>${selectedPreviewCoords.view.yaw.toFixed(2)}°</code>,
                     Pitch: <code>${selectedPreviewCoords.view.pitch.toFixed(2)}°</code>
                 </div>
                 <div style="color: #666; font-size: 12px;">
@@ -931,6 +968,8 @@
     }
 
     function deleteHotspot(index) {
+        if (isInIframe) return; // Не удаляем точки в iframe
+
         if (confirm('Удалить эту точку?')) {
             currentHotspots.splice(index, 1);
             loadHotspotsList();
@@ -939,6 +978,8 @@
     }
 
     function exportToJson() {
+        if (isInIframe) return; // Не экспортируем в iframe
+
         if (currentHotspots.length === 0) {
             alert('Нет точек для экспорта');
             return;
@@ -961,10 +1002,13 @@
     }
 
     function importJson() {
+        if (isInIframe) return; // Не импортируем в iframe
         document.getElementById('jsonFileInput').click();
     }
 
     function handleJsonFileSelect(event) {
+        if (isInIframe) return; // Не обрабатываем импорт в iframe
+
         var file = event.target.files[0];
         if (!file) return;
 
@@ -1077,6 +1121,41 @@
             }
         });
     }
+
+    // Обработчик сообщений от родительской страницы (если edit.html загружен в iframe)
+    window.addEventListener('message', function(event) {
+        // Проверяем источник сообщения для безопасности
+        // if (event.origin !== 'http://expected-origin.com') return;
+
+        if (event.data && event.data.type === 'pannellum_control') {
+            switch(event.data.action) {
+                case 'loadScene':
+                    if (event.data.photo) {
+                        let currentUrl = new URL(window.location.href);
+                        currentUrl.searchParams.set('photo', event.data.photo);
+                        if (event.data.hotSpots) {
+                            currentUrl.searchParams.set('hotSpots', encodeURIComponent(JSON.stringify(event.data.hotSpots)));
+                        }
+                        window.history.pushState({}, '', currentUrl);
+                        setSelectPanorama(event.data.hotSpot || null);
+                    }
+                    break;
+                case 'getState':
+                    // Отправляем состояние обратно родителю
+                    try {
+                        window.parent.postMessage({
+                            type: 'pannellum_state',
+                            currentScene: currentScene,
+                            isLoaded: sceneMain ? sceneMain.isLoaded() : false,
+                            hotspotsCount: currentHotspots.length
+                        }, '*');
+                    } catch(e) {
+                        console.log('Cannot post message to parent');
+                    }
+                    break;
+            }
+        }
+    });
 </script>
 </body>
 </html>
