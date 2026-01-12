@@ -9,7 +9,6 @@
     <script type="text/javascript" src="lib/Pannellum2_5_6/pannellum.js"></script>
     <script type="text/javascript" src="lib/Pannellum2_5_6/libpannellum.js"></script>
     <style>
-        /* Добавляем стили для полноэкранного отображения */
         html, body {
             margin: 0;
             padding: 0;
@@ -28,160 +27,25 @@
             z-index: 1;
         }
 
-        /* Стили для iframe информации */
-        .iframe-info {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            z-index: 10001;
-            max-width: 300px;
-            display: none;
-            border: 1px solid #555;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .iframe-info h3 {
-            margin: 0 0 8px 0;
-            color: #4CAF50;
-            font-size: 14px;
-        }
-
-        .iframe-info .attr {
-            margin: 3px 0;
-            font-family: monospace;
-            font-size: 11px;
-            color: #ddd;
-        }
-
-        .iframe-info .toggle-btn {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 3px 8px;
-            cursor: pointer;
-            font-size: 10px;
-        }
-
-        /* Оптимизация для iframe */
-        body.iframe-mode .pnlm-about-msg {
+        /* Скрываем элемент about у Pannellum */
+        .pnlm-about-msg {
             display: none !important;
-        }
-
-        /* Отключаем выделение текста для лучшей производительности */
-        * {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
 <body>
 <div id="canvas"></div>
 
-<!-- Блок информации об iframe атрибутах -->
-<div id="iframeInfo" class="iframe-info">
-    <button class="toggle-btn" onclick="toggleIframeInfo()">×</button>
-    <h3>IFrame Attributes</h3>
-    <div id="iframeAttributes"></div>
-</div>
-
 <script>
     var sceneMain = null;
     var currentScene = null;
-    var isInIframe = window.self !== window.top;
-    var iframeInfoVisible = false;
 
-    // Инициализация
     document.addEventListener('DOMContentLoaded', function() {
-        // Если страница в iframe, добавляем класс для стилей
-        if (isInIframe) {
-            document.body.classList.add('iframe-mode');
-            // Показываем информацию об iframe атрибутах
-            setTimeout(showIframeAttributes, 500);
-        }
-
-        // Предотвращаем стандартное контекстное меню на всей странице
         document.addEventListener('contextmenu', function(e) {
-            if (!e.target.closest('#iframeInfo')) {
-                e.preventDefault();
-            }
+            e.preventDefault();
         });
-
         loadInitialScene();
     });
-
-    // Функция для показа атрибутов iframe
-    function showIframeAttributes() {
-        if (!isInIframe) return;
-
-        try {
-            var iframes = window.parent.document.getElementsByTagName('iframe');
-            var currentIframe = null;
-
-            // Находим текущий iframe
-            for (var i = 0; i < iframes.length; i++) {
-                try {
-                    if (iframes[i].contentWindow === window) {
-                        currentIframe = iframes[i];
-                        break;
-                    }
-                } catch(e) {
-                    // Игнорируем ошибки безопасности
-                }
-            }
-
-            if (currentIframe) {
-                var attrs = currentIframe.attributes;
-                var attrHtml = '';
-
-                for (var j = 0; j < attrs.length; j++) {
-                    var attr = attrs[j];
-                    attrHtml += '<div class="attr"><strong>' + attr.name + ':</strong> ' +
-                        (attr.value || 'true') + '</div>';
-                }
-
-                document.getElementById('iframeAttributes').innerHTML = attrHtml;
-                document.getElementById('iframeInfo').style.display = 'block';
-                iframeInfoVisible = true;
-            }
-        } catch(e) {
-            console.log('Cannot access iframe attributes due to security restrictions');
-        }
-    }
-
-    // Функция для переключения видимости информации об iframe
-    function toggleIframeInfo() {
-        var infoDiv = document.getElementById('iframeInfo');
-        iframeInfoVisible = !iframeInfoVisible;
-        infoDiv.style.display = iframeInfoVisible ? 'block' : 'none';
-    }
-
-    // Глобальная функция для скрытия iframe информации (может быть вызвана из родительской страницы)
-    window.hideIframeInfo = function() {
-        document.getElementById('iframeInfo').style.display = 'none';
-        iframeInfoVisible = false;
-    };
-
-    // Глобальная функция для показа iframe информации
-    window.showIframeInfo = function() {
-        if (isInIframe) {
-            document.getElementById('iframeInfo').style.display = 'block';
-            iframeInfoVisible = true;
-        }
-    };
 
     function loadInitialScene() {
         setSelectPanorama();
@@ -191,16 +55,13 @@
         let params = new URLSearchParams(document.location.search);
         let infoValue = params.get('info');
         let photoValue = params.get('photo');
-        let hotSpots = params.get('hotSpots');
         let canvas = document.getElementById('canvas');
         canvas.style.width = '100%';
         canvas.style.height = '100%';
-
-        // Базовый конфигурационный объект
         let jsonObj = {
             "hotSpotDebug": false,
             "hotPointDebug": false,
-            "sceneFadeDuration": isInIframe ? 500 : 1000,
+            "sceneFadeDuration": 1000,
             "default": {
                 "firstScene": "scene1"
             },
@@ -215,24 +76,10 @@
                 }
             }
         };
-
-        // Добавляем обработчики событий
         jsonObj.onClickHotSpot = onClickHotSpot;
-        jsonObj.onDblClick = isInIframe ? null : onDblClick;
-        jsonObj.onClick = onClick;
-
-        if (!isInIframe) {
-            jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
-            jsonObj.onContextMenu = onContextMenu;
-        }
-
-        // Функция для завершения настройки и отображения сцены
         const finalizeScene = async (imageUrl, isExternal, hotspotsData, cameraDirection) => {
-            // Обновляем поля сцены
             jsonObj.scenes.scene1.panorama = imageUrl;
             jsonObj.scenes.scene1.crossOrigin = isExternal ? undefined : "use-credentials";
-
-            // Устанавливаем направление камеры из hotSpot или из JSON
             if (hotSpot && hotSpot.point_pitch !== undefined) {
                 jsonObj.scenes.scene1.pitch = hotSpot.point_pitch;
             } else if (cameraDirection && cameraDirection.pitchCam !== undefined) {
@@ -244,39 +91,7 @@
             } else if (cameraDirection && cameraDirection.yawCam !== undefined) {
                 jsonObj.scenes.scene1.yaw = cameraDirection.yawCam;
             }
-
-            // Если есть hotspots в URL параметре, парсим их
-            var hotspotsArray = [];
-            if (hotSpots) {
-                try {
-                    hotspotsArray = JSON.parse(decodeURIComponent(hotSpots));
-                } catch (e) {
-                    console.error("Error parsing hotSpots URL parameter:", e);
-                }
-            }
-
-            // Объединяем hotspots из JSON и URL параметра
-            var allHotSpots = [];
-            if (Array.isArray(hotspotsData)) {
-                allHotSpots = allHotSpots.concat(hotspotsData);
-            }
-            if (Array.isArray(hotspotsArray)) {
-                allHotSpots = allHotSpots.concat(hotspotsArray);
-            }
-
-            // Убираем дубликаты по pitch/yaw
-            var uniqueHotspots = [];
-            var seen = {};
-            allHotSpots.forEach(function(item) {
-                var key = item.pitch + '|' + item.yaw + '|' + (item.panorama_url || '');
-                if (!seen[key]) {
-                    seen[key] = true;
-                    uniqueHotspots.push(item);
-                }
-            });
-
-            // Преобразуем hotspots в формат Pannellum
-            jsonObj.scenes.scene1.hotSpots = uniqueHotspots.map(function(hotspot) {
+            jsonObj.scenes.scene1.hotSpots = hotspotsData.map(function(hotspot) {
                 return {
                     pitch: hotspot.pitch,
                     yaw: hotspot.yaw,
@@ -288,26 +103,11 @@
                     point_yaw: hotspot.targetYaw || 0
                 };
             });
-
-            // Оптимизация для iframe: уменьшаем качество если в iframe
-            if (isInIframe) {
-                jsonObj.multiResMinHfov = true;
-                if (jsonObj.scenes && jsonObj.scenes.scene1) {
-                    jsonObj.scenes.scene1.maxHfov = 120;
-                    jsonObj.scenes.scene1.minHfov = 30;
-                }
-            }
-
-            // Уничтожаем предыдущую сцену если она существует
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
                 sceneMain.destroy();
             }
-
-            // Создаем новую сцену
             sceneMain = pannellum.viewer('canvas', jsonObj);
             currentScene = imageUrl;
-
-            // Если есть направление камеры из JSON, устанавливаем его с задержкой
             if (cameraDirection && (cameraDirection.pitchCam !== undefined || cameraDirection.yawCam !== undefined)) {
                 setTimeout(function() {
                     if (sceneMain) {
@@ -319,8 +119,6 @@
                 }, 1000);
             }
         };
-
-        // Основная логика загрузки
         if (photoValue) {
             var imageUrl = photoValue;
             var isExternal = /^https?:\/\//i.test(photoValue);
@@ -353,12 +151,8 @@
             }
         }
         else if (infoValue) {
-            // Для старых JSON конфигураций
             let oldJsonObj = getJsonUrlData('/Example/pano360/point_info/' + infoValue);
-
-            // Объединяем с базовым jsonObj
             Object.assign(jsonObj, oldJsonObj);
-
             if (hotSpot) {
                 if (hotSpot.point_pitch !== undefined && jsonObj.scenes && jsonObj.scenes.scene1) {
                     jsonObj.scenes.scene1.pitch = hotSpot.point_pitch;
@@ -446,7 +240,7 @@
         }
     }
 
-    // Функция для загрузки hotspots из JSON файла (аналогично edit.html)
+    // Функция для загрузки hotspots из JSON файла
     async function loadHotSpotsFromJson(jsonUrl) {
         try {
             const response = await fetch(jsonUrl, {
@@ -486,63 +280,15 @@
         }
     }
 
-    function onDblClick(coords, screenCoords, event) {
-        if (isInIframe) return;
-
-        console.log("Double click on scene:", {
-            coords: coords,
-            screenCoords: screenCoords,
-            event: event
-        });
-
-        // Копируем координаты в буфер обмена (только для отладки)
-        var text = `Yaw: ${coords.yaw.toFixed(2)}, Pitch: ${coords.pitch.toFixed(2)}`;
-        navigator.clipboard.writeText(text).then(function() {
-            console.log('Coordinates copied to clipboard:', text);
-        });
-    }
-
-    function onClick(coords, screenCoords, event) {
-        console.log("onClick", coords);
-
-        // Отправляем координаты клика в родительское окно (для предпросмотра)
-        try {
-            if (window.parent && window !== window.parent) {
-                window.parent.postMessage({
-                    type: 'pannellum_click',
-                    yaw: coords.yaw,
-                    pitch: coords.pitch,
-                    screenX: screenCoords.x,
-                    screenY: screenCoords.y
-                }, '*');
-            }
-        } catch(e) {
-            console.log('Cannot post message to parent');
-        }
-    }
-
+    // Обработчик клика на HotSpot (переход к другой панораме)
     function onClickHotSpot(hs) {
-        console.log("onClickHotSpot", hs);
+        console.log("Переход к другой сцене:", hs);
 
         // Проверяем, есть ли URL для загрузки новой сцены
         if (hs.panorama_url) {
             // Обновляем URL страницы с новыми параметрами
             let currentUrl = new URL(window.location.href);
             currentUrl.searchParams.set('photo', hs.panorama_url);
-            currentUrl.searchParams.delete('hotSpots');
-
-            // Если в iframe, используем postMessage для уведомления родителя
-            if (isInIframe) {
-                try {
-                    window.parent.postMessage({
-                        type: 'pannellum_navigation',
-                        url: currentUrl.toString(),
-                        hotSpot: hs
-                    }, '*');
-                } catch(e) {
-                    console.log('Cannot post message to parent');
-                }
-            }
 
             window.history.pushState({}, '', currentUrl);
 
@@ -561,29 +307,10 @@
             } else {
                 currentUrl.searchParams.set('info', hs.panorama_url.split('/')[4]);
             }
-            currentUrl.searchParams.delete('hotSpots');
-            // Если в iframe, уведомляем родителя
-            if (isInIframe) {
-                try {
-                    window.parent.postMessage({
-                        type: 'pannellum_navigation',
-                        url: currentUrl.toString(),
-                        hotSpot: hs
-                    }, '*');
-                } catch(e) {
-                    console.log('Cannot post message to parent');
-                }
-            }
+
             window.history.pushState({}, '', currentUrl);
             let jsonObj = getJsonUrlData(hs['panorama_url']);
             jsonObj.onClickHotSpot = onClickHotSpot;
-            jsonObj.onDblClick = isInIframe ? null : onDblClick;
-            jsonObj.onClick = onClick;
-
-            if (!isInIframe) {
-                jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
-                jsonObj.onContextMenu = onContextMenu;
-            }
 
             jsonObj['pitch'] = hs['point_pitch'];
             jsonObj['yaw'] = hs['point_yaw'];
@@ -597,6 +324,7 @@
         return false;
     }
 
+    // Вспомогательная функция для получения JSON данных (для обратной совместимости)
     function getJsonUrlData(url, data) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', url, false);
@@ -609,145 +337,9 @@
         }
     }
 
-    function onContextMenuHotSpot(coords, screenCoords, event, hotSpot) {
-        if (isInIframe) return;
-
-        console.log("Right click on HotSpot:", {
-            coords: coords,
-            screenCoords: screenCoords,
-            hotSpot: hotSpot,
-            event: event
-        });
-
-        showCustomContextMenu(screenCoords.x, screenCoords.y, {
-            type: 'hotspot',
-            data: hotSpot,
-            coords: coords
-        });
-    }
-
-    function onContextMenu(coords, screenCoords, event) {
-        if (isInIframe) return;
-
-        console.log("Right click on scene:", {
-            coords: coords,
-            screenCoords: screenCoords,
-            event: event
-        });
-        showCustomContextMenu(screenCoords.x, screenCoords.y, {
-            type: 'scene',
-            data: coords,
-            screenCoords: screenCoords
-        });
-    }
-
-    function showCustomContextMenu(x, y, data) {
-        if (isInIframe) return;
-
-        var oldMenu = document.getElementById('custom-context-menu');
-        if (oldMenu) {
-            oldMenu.remove();
-        }
-
-        var menu = document.createElement('div');
-        menu.id = 'custom-context-menu';
-        menu.style.position = 'absolute';
-        menu.style.left = x + 'px';
-        menu.style.top = y + 'px';
-        menu.style.background = 'white';
-        menu.style.border = '1px solid #ccc';
-        menu.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.2)';
-        menu.style.zIndex = '10000';
-        menu.style.padding = '5px 0';
-        menu.style.minWidth = '150px';
-
-        if (data.type === 'hotspot') {
-            menu.innerHTML = `
-            <div class="menu-item" onclick="handleHotSpotAction('edit', ${JSON.stringify(data.data).replace(/"/g, '&quot;')})" style="padding: 5px 10px; cursor: pointer;">Edit HotSpot</div>
-            <div class="menu-item" onclick="handleHotSpotAction('delete', ${JSON.stringify(data.data).replace(/"/g, '&quot;')})" style="padding: 5px 10px; cursor: pointer;">Delete HotSpot</div>
-            <hr style="margin: 5px 0;">
-            <div class="menu-item" onclick="copyCoords(${JSON.stringify(data.coords)})" style="padding: 5px 10px; cursor: pointer;">Copy Coordinates</div>
-        `;
-        } else {
-            menu.innerHTML = `
-            <div class="menu-item" onclick='addHotSpotAt(${JSON.stringify(data.data)})' style="padding: 5px 10px; cursor: pointer;">Add HotSpot Here</div>
-            <div class="menu-item" onclick='copyCoords(${JSON.stringify(data.data)})' style="padding: 5px 10px; cursor: pointer;">Copy Coordinates</div>
-            <hr style="margin: 5px 0;">
-            <div class="menu-item" onclick='centerView(${JSON.stringify(data.data)})' style="padding: 5px 10px; cursor: pointer;">Center View Here</div>
-        `;
-        }
-
-        document.body.appendChild(menu);
-
-        setTimeout(function() {
-            document.addEventListener('click', function closeMenu(e) {
-                if (!menu.contains(e.target)) {
-                    menu.remove();
-                    document.removeEventListener('click', closeMenu);
-                }
-            });
-        }, 0);
-    }
-
-    function handleHotSpotAction(action, hotSpot) {
-        if (isInIframe) return;
-        console.log(action + ' HotSpot:', hotSpot);
-        alert(action + ' HotSpot: ' + (hotSpot.text || hotSpot.type));
-    }
-
-    function copyCoords(coords) {
-        if (isInIframe) return;
-        var text = `Yaw: ${coords.yaw.toFixed(2)}, Pitch: ${coords.pitch.toFixed(2)}`;
-        navigator.clipboard.writeText(text).then(function() {
-            console.log('Coordinates copied to clipboard:', text);
-            alert('Coordinates copied: ' + text);
-        });
-    }
-
-    function addHotSpotAt(coords) {
-        if (isInIframe) return;
-        console.log('Add HotSpot at:', coords);
-        alert('Add HotSpot at: Yaw=' + coords.yaw.toFixed(2) + ', Pitch=' + coords.pitch.toFixed(2));
-    }
-
-    function centerView(coords) {
-        if (sceneMain) {
-            sceneMain.lookAt(coords.pitch, coords.yaw, sceneMain.getHfov(), 500);
-        }
-    }
-
-    // Обработчик сообщений от родительской страницы
-    window.addEventListener('message', function(event) {
-        if (event.data && event.data.type === 'pannellum_control') {
-            switch(event.data.action) {
-                case 'loadScene':
-                    if (event.data.photo) {
-                        let currentUrl = new URL(window.location.href);
-                        currentUrl.searchParams.set('photo', event.data.photo);
-                        if (event.data.hotSpots) {
-                            currentUrl.searchParams.set('hotSpots', encodeURIComponent(JSON.stringify(event.data.hotSpots)));
-                        }
-                        window.history.pushState({}, '', currentUrl);
-                        setSelectPanorama(event.data.hotSpot || null);
-                    }
-                    break;
-                case 'toggleInfo':
-                    toggleIframeInfo();
-                    break;
-                case 'getState':
-                    // Отправляем состояние обратно родителю
-                    try {
-                        window.parent.postMessage({
-                            type: 'pannellum_state',
-                            currentScene: currentScene,
-                            isLoaded: sceneMain ? sceneMain.isLoaded() : false
-                        }, '*');
-                    } catch(e) {
-                        console.log('Cannot post message to parent');
-                    }
-                    break;
-            }
-        }
+    // Обработчик навигации по истории браузера
+    window.addEventListener('popstate', function() {
+        setSelectPanorama();
     });
 </script>
 </body>
