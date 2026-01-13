@@ -11,7 +11,13 @@ https://raw.githack.com/MyasnikovIA/Pano360/main/viewer.html?photo=https://raw.g
 
 
 https://raw.githack.com/MyasnikovIA/Pano360/main/viewer.html?photo=https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/11.01.2026(2)/PANO_IMG_20260111_172554.JPG
-Pano360Slesarka
 
-Pano360_Slesarka
+
+http://www.smwrap.ru/Pano360Git/edit.html?photo=http://www.smwrap.ru/Pano360Git/img/07.09.2025%2FPIC_20250907_152549.jpg
+
+
+http://www.smwrap.ru/Pano360Git/img/Tailand_2024/PIC_20240529_070050.jpg
+http://www.smwrap.ru/Pano360Git/edit.html?photo=http://www.smwrap.ru/Pano360Git/img/Tailand_2024/PIC_20240529_070050.jpg
+http://www.smwrap.ru/Pano360Git/edit.html?photo=http://www.smwrap.ru/Pano360Git/img/Tailand_2024/PIC_20240606_155859.jpg
+
 Панорамное фото слесарки

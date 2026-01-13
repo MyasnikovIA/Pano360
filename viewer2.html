@@ -244,7 +244,6 @@
     // Функция для загрузки hotspots из JSON файла с использованием XMLHttpRequest
     function loadHotSpotsFromJson(jsonUrl, callback) {
         try {
-            debugger
             var xhr = new XMLHttpRequest();
             var timestamp = new Date().getTime();
             var jsonUrlWithCacheBust = jsonUrl + (jsonUrl.includes('?') ? '&' : '?') + '_nocache=' + timestamp;
