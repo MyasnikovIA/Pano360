@@ -220,6 +220,7 @@
             <label for="hotspotUrl">URL панорамы для перехода:</label>
             <div class="url-input-group">
                 <input type="text" id="hotspotUrl" placeholder="Введите URL панорамы">
+                <button id="previewClsUrl" class="btn">cls</button>
                 <button id="previewButton" class="btn btn-success">Предпросмотр</button>
             </div>
         </div>
@@ -626,7 +627,9 @@
 
     function onClickHotSpot(hs) {
         console.log("onClickHotSpot", hs);
-
+        if (sceneMain) {
+            copyToClipboardLegacy(sceneMain.getConfig().panorama,null);
+        }
         // Проверяем, есть ли URL для загрузки новой сцены
         if (hs.panorama_url) {
             // Обновляем URL страницы с новыми параметрами
@@ -838,7 +841,7 @@
         modal.style.display = 'flex';
 
         document.getElementById('hotspotName').value = '';
-        document.getElementById('hotspotUrl').value = '';
+        (sceneMain) ? document.getElementById('hotspotUrl').value = sceneMain.getConfig().panorama : document.getElementById('hotspotUrl').value = '';
         document.getElementById('hotspotType').value = 'scene';
         document.getElementById('hotspotText').value = '';
         document.getElementById('selectedCoordinates').textContent = 'Не выбрано';
@@ -868,6 +871,9 @@
         }
     }
 
+    function clsUrlPreview() {
+        document.getElementById('hotspotUrl').value = '';
+    }
     function loadPreview() {
         if (isInIframe) return; // Не загружаем предпросмотр в iframe
 
@@ -1359,6 +1365,7 @@
     function initModalHandlers() {
         // Кнопка предпросмотра
         document.getElementById('previewButton').addEventListener('click', loadPreview);
+        document.getElementById('previewClsUrl').addEventListener('click', clsUrlPreview);
 
         // Кнопка сохранения
         document.getElementById('saveHotspotButton').addEventListener('click', saveHotspot);
@@ -1420,6 +1427,36 @@
             }
         }
     });
+    function copyToClipboardLegacy(text, callback) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+
+        textArea.focus();
+        textArea.select();
+
+        try {
+            const successful = document.execCommand('copy');
+            const msg = successful ? 'успешно' : 'не удалось';
+            console.log(`Копирование ${msg}`);
+
+            if (callback) {
+                callback(successful ? null : new Error('Копирование не удалось'));
+            }
+        } catch (err) {
+            console.error('Ошибка при копировании:', err);
+            if (callback) {
+                callback(err);
+            }
+        } finally {
+            document.body.removeChild(textArea);
+        }
+    }
+
 </script>
 </body>
 </html>
