@@ -17,7 +17,8 @@ http://www.smwrap.ru/Pano360Git/edit.html?photo=http://www.smwrap.ru/Pano360Git/
 
 
 http://www.smwrap.ru/Pano360Git/img/Tailand_2024/PIC_20240529_070050.jpg
-http://www.smwrap.ru/Pano360Git/edit.html?photo=http://www.smwrap.ru/Pano360Git/img/Tailand_2024/PIC_20240529_070050.jpg
-http://www.smwrap.ru/Pano360Git/edit.html?photo=http://www.smwrap.ru/Pano360Git/img/Tailand_2024/PIC_20240606_155859.jpg
+
+http://www.smwrap.ru/Pano360Git/edit.html?photo=http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_105740.jpg
+http://www.smwrap.ru/Pano360Git/viewer.html?photo=http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_105740.jpg
 
 Панорамное фото слесарки
