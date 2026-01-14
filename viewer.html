@@ -2,39 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panorama Player</title>
-    <!-- Pannellum CSS -->
-    <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css"/>
-    <!-- Pannellum JS -->
-    <script type="text/javascript" src="lib/Pannellum2_5_6/pannellum.js"></script>
-    <script type="text/javascript" src="lib/Pannellum2_5_6/libpannellum.js"></script>
-    <script type="text/javascript" src="lib/Pannellum2_5_6/panorama_player.js"></script>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #000;
-        }
-
-        #canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        /* Скрываем элемент about у Pannellum */
-        .pnlm-about-msg {
-            display: none !important;
-        }
-    </style>
+    <link rel="stylesheet" href="lib/app/view.css"/>
+    <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css">
 </head>
 <body>
-<div id="canvas"></div>
+<div id="canvas" role="main" aria-label="Panorama viewer"></div>
+
+<script src="lib/Pannellum2_5_6/pannellum.js"></script>
+<script src="lib/Pannellum2_5_6/libpannellum.js"></script>
+<script src="lib/Pannellum2_5_6/panorama_player.js" defer></script>
 </body>
 </html>
