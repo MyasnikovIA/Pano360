@@ -31,16 +31,21 @@
             </div>
         </div>
 
+        <div id="previewIframeContainer" class="iframe-container">
+            <!-- IFRAME с viewer_preview.html будет загружен здесь -->
+        </div>
+
+
+        <div class="modal-actions">
+            <button id="saveHotspotButton" class="btn btn-primary">Сохранить точку</button>
+            <button id="exportJsonButton" class="btn btn-secondary">Экспорт в JSON</button>
+            <button id="importJsonButton" class="btn btn-warning">Импорт JSON</button>
+            <button id="cancelButton" class="btn">Отмена</button>
+        </div>
+
         <div id="previewContainer" class="preview-container" style="display: none;">
             <h3>Предпросмотр панорамы</h3>
             <p><strong>Инструкция:</strong> Переместите камеру в нужное направление и сделайте <strong>двойной клик</strong> для выбора точки</p>
-            <div id="previewIframeContainer" class="iframe-container">
-                <!-- IFRAME с viewer_preview.html будет загружен здесь -->
-            </div>
-            <div class="preview-coordinates">
-                <p>Выбранные координаты:</p>
-                <div id="selectedCoordinates">Не выбрано</div>
-            </div>
         </div>
 
         <div class="form-group">
@@ -55,13 +60,6 @@
         <div class="form-group">
             <label for="hotspotText">Текст на точке:</label>
             <input type="text" id="hotspotText" placeholder="Текст, который будет отображаться">
-        </div>
-
-        <div class="modal-actions">
-            <button id="saveHotspotButton" class="btn btn-primary">Сохранить точку</button>
-            <button id="exportJsonButton" class="btn btn-secondary">Экспорт в JSON</button>
-            <button id="importJsonButton" class="btn btn-warning">Импорт JSON</button>
-            <button id="cancelButton" class="btn">Отмена</button>
         </div>
 
         <div id="importSuccess" class="import-success"></div>
@@ -615,8 +613,6 @@
         (sceneMain) ? document.getElementById('hotspotUrl').value = sceneMain.getConfig().panorama : document.getElementById('hotspotUrl').value = '';
         document.getElementById('hotspotType').value = 'scene';
         document.getElementById('hotspotText').value = '';
-        document.getElementById('selectedCoordinates').textContent = 'Не выбрано';
-        document.getElementById('previewContainer').style.display = 'none';
         document.getElementById('importSuccess').style.display = 'none';
 
         // Очищаем iframe контейнер
@@ -655,8 +651,6 @@
         }
 
         // Показать контейнер предпросмотра
-        document.getElementById('previewContainer').style.display = 'block';
-        document.getElementById('selectedCoordinates').innerHTML = '<em>Загрузка предпросмотра...</em>';
 
         // Создать iframe с viewer_preview.html
         var iframeContainer = document.getElementById('previewIframeContainer');
@@ -690,25 +684,6 @@
                 click: event.data.clickCoords,
                 view: event.data.viewCoords
             };
-
-            // Обновляем отображение координат
-            var coordsText = `
-                <div style="margin-bottom: 8px;">
-                    <strong>Координаты клика:</strong><br>
-                    Yaw: <code>${selectedPreviewCoords.click.yaw.toFixed(2)}°</code>,
-                    Pitch: <code>${selectedPreviewCoords.click.pitch.toFixed(2)}°</code>
-                </div>
-                <div>
-                    <strong>Направление камеры:</strong><br>
-                    Yaw: <code>${selectedPreviewCoords.view.yaw.toFixed(2)}°</code>,
-                    Pitch: <code>${selectedPreviewCoords.view.pitch.toFixed(2)}°</code>
-                </div>
-                <div style="margin-top: 8px; color: #4CAF50;">
-                    <strong>✓ Координаты выбраны успешно!</strong>
-                </div>
-            `;
-
-            document.getElementById('selectedCoordinates').innerHTML = coordsText;
         }
     }
 
@@ -912,17 +887,6 @@
                     yaw: hotspot.targetYaw
                 }
             };
-            var coordsText = `
-                <div style="margin-bottom: 8px;">
-                    <strong>Направление камеры:</strong><br>
-                    Yaw: <code>${selectedPreviewCoords.view.yaw.toFixed(2)}°</code>,
-                    Pitch: <code>${selectedPreviewCoords.view.pitch.toFixed(2)}°</code>
-                </div>
-                <div style="color: #666; font-size: 12px;">
-                    (загружено из сохранённой точки)
-                </div>
-            `;
-            document.getElementById('selectedCoordinates').innerHTML = coordsText;
         }
 
         currentHotspots.splice(index, 1);
