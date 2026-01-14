@@ -165,7 +165,8 @@
                         sceneId: "scene1",
                         panorama_url: hotspot.panorama_url,
                         point_pitch: hotspot.targetPitch || 0,
-                        point_yaw: hotspot.targetYaw || 0
+                        point_yaw: hotspot.targetYaw || 0,
+                        customScale: hotspot.customScale || undefined
                     };
                 });
 
@@ -220,7 +221,8 @@
                     sceneId: "scene1",
                     panorama_url: hotspot.panorama_url,
                     point_pitch: hotspot.targetPitch || 0,
-                    point_yaw: hotspot.targetYaw || 0
+                    point_yaw: hotspot.targetYaw || 0,
+                    customScale: hotspot.customScale || undefined
                 };
             });
             if (sceneMain && typeof sceneMain['destroy'] !== 'undefined') {
