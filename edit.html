@@ -624,35 +624,17 @@
     function onClick(hs) {
         console.log("onClick", arguments[0]);
     }
-
     function onClickHotSpot(hs) {
-        console.log("onClickHotSpot", hs);
+        console.log("Переход к другой сцене:", hs);
         if (sceneMain) {
             copyToClipboardLegacy(sceneMain.getConfig().panorama,null);
         }
-        // Проверяем, есть ли URL для загрузки новой сцены
         if (hs.panorama_url) {
-            // Обновляем URL страницы с новыми параметрами
             let currentUrl = new URL(window.location.href);
             currentUrl.searchParams.set('photo', hs.panorama_url);
-            currentUrl.searchParams.delete('hotSpots');
-
-            // Если в iframe, используем postMessage для уведомления родителя
-            if (isInIframe) {
-                try {
-                    window.parent.postMessage({
-                        type: 'pannellum_navigation',
-                        url: currentUrl.toString(),
-                        hotSpot: hs
-                    }, '*');
-                } catch(e) {
-                    console.log('Cannot post message to parent');
-                }
-            }
-
             window.history.pushState({}, '', currentUrl);
-
-            // Загружаем новую сцену
+            hs.pitch = hs.point_pitch;
+            hs.yaw = hs.point_yaw;
             setSelectPanorama(hs);
             return true;
         }
@@ -667,29 +649,10 @@
             } else {
                 currentUrl.searchParams.set('info', hs.panorama_url.split('/')[4]);
             }
-            currentUrl.searchParams.delete('hotSpots');
-            // Если в iframe, уведомляем родителя
-            if (isInIframe) {
-                try {
-                    window.parent.postMessage({
-                        type: 'pannellum_navigation',
-                        url: currentUrl.toString(),
-                        hotSpot: hs
-                    }, '*');
-                } catch(e) {
-                    console.log('Cannot post message to parent');
-                }
-            }
+
             window.history.pushState({}, '', currentUrl);
             let jsonObj = getJsonUrlData(hs['panorama_url']);
             jsonObj.onClickHotSpot = onClickHotSpot;
-            jsonObj.onDblClick = isInIframe ? null : onDblClick; // Отключаем двойной клик в iframe
-            jsonObj.onClick = onClick;
-
-            if (!isInIframe) {
-                jsonObj.onContextMenuHotSpot = onContextMenuHotSpot;
-                jsonObj.onContextMenu = onContextMenu;
-            }
 
             jsonObj['pitch'] = hs['point_pitch'];
             jsonObj['yaw'] = hs['point_yaw'];
