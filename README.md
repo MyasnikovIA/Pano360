@@ -31,4 +31,7 @@ https://raw.githack.com/MyasnikovIA/Pano360/main/viewer.html?photo=http://www.sm
 https://raw.githack.com/MyasnikovIA/Pano360/main/viewer.html?photo=https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/04.01.2026/DSCN0027_.JPG
 https://raw.githack.com/MyasnikovIA/Pano360/main/viewer.html?photo=http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_161717.jpg
 
+
+http://www.smwrap.ru/Pano360Git/viewer.html?photo=https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/04.01.2026/DSCN0027_.JPG
+
 Панорамное фото слесарки
