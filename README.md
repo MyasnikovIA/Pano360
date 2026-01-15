@@ -42,4 +42,5 @@ PIC_20240606_155845
 
 ----- фрики -----
 http://www.smwrap.ru/Pano360Git/viewer.html?photo=http%3A%2F%2Fwww.smwrap.ru%2FPano360Git%2Fimg%2FTailand_2024%2FPhuket%2FPIC_20240606_160400.jpg
+http://www.smwrap.ru/Pano360Git/viewer.html?photo=http%3A%2F%2Fwww.smwrap.ru%2FPano360Git%2Fimg%2FTailand_2024%2FPhuket%2FPIC_20240606_160555.jpg
 -----------------
