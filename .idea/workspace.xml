@@ -26,9 +26,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cb04855e-d89b-4502-98b2-42ba1f3f20c1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/info.txt" beforeDir="false" afterPath="$PROJECT_DIR$/info.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_edit.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_edit.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_player.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_player.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,6 +99,7 @@
       <workItem from="1768267735264" duration="3103000" />
       <workItem from="1768294652136" duration="9068000" />
       <workItem from="1768347503209" duration="17261000" />
+      <workItem from="1768544916813" duration="749000" />
     </task>
     <servers />
   </component>
