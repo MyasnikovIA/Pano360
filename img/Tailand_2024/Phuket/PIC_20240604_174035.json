@@ -1,0 +1,18 @@
+{
+  "pitchCam": -15.891162547153,
+  "yawCam": -131.94079580071,
+  "hotSpots": [
+    {
+      "id": 1768566319868,
+      "name": "Без имени",
+      "type": "scene",
+      "text": "Точка перехода",
+      "pitch": -2.323326488063,
+      "yaw": -131.170449473573,
+      "targetPitch": 16.375015465366,
+      "targetYaw": 33.388099959941,
+      "panorama_url": "http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240604_174759.jpg",
+      "createdAt": "2026-01-16T12:25:19.868Z"
+    }
+  ]
+}
