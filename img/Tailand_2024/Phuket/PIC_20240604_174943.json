@@ -1,0 +1,30 @@
+{
+  "pitchCam": -22.868689833988,
+  "yawCam": -126.424900490726,
+  "hotSpots": [
+    {
+      "id": 1768566090301,
+      "name": "Без имени",
+      "type": "scene",
+      "text": "Точка перехода",
+      "pitch": 1.94006578645,
+      "yaw": 57.050874226407,
+      "targetPitch": -0.785847445549,
+      "targetYaw": 36.543868255252,
+      "panorama_url": "http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240604_175001.jpg",
+      "createdAt": "2026-01-16T12:21:30.301Z"
+    },
+    {
+      "id": 1768566150309,
+      "name": "Без имени",
+      "type": "scene",
+      "text": "Точка перехода",
+      "pitch": -6.884456527451,
+      "yaw": -121.540368981713,
+      "targetPitch": -4.159951416742,
+      "targetYaw": -115.325764362157,
+      "panorama_url": "http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240604_174831.jpg",
+      "createdAt": "2026-01-16T12:22:30.309Z"
+    }
+  ]
+}
