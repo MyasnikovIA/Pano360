@@ -8,10 +8,14 @@
     <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css">
 </head>
 <body>
-<div id="canvas" role="main" aria-label="Panorama viewer"></div>
-
-<script src="lib/Pannellum2_5_6/pannellum.js"></script>
-<script src="lib/Pannellum2_5_6/libpannellum.js"></script>
-<script src="lib/Pannellum2_5_6/panorama_player.js" defer></script>
+    <div id="canvas" role="main" aria-label="Panorama viewer"></div>
+    <script src="lib/Pannellum2_5_6/pannellum.js"></script>
+    <script src="lib/Pannellum2_5_6/libpannellum.js"></script>
+    <script src="lib/Pannellum2_5_6/panorama_player.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            window.panoramaPlayer = new PanoramaPlayer('canvas', 'https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/Tailand_2024/Phuket/PIC_20240606_110636.jpg');
+        });
+    </script>
 </body>
 </html>
