@@ -6,6 +6,23 @@
     <title>Panorama Player</title>
     <link rel="stylesheet" href="lib/app/view.css"/>
     <link rel="stylesheet" href="lib/Pannellum2_5_6/pannellum.css">
+    <style>
+        .panorama-error {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+    </style>
 </head>
 <body>
     <div id="canvas" role="main" aria-label="Panorama viewer"></div>
@@ -14,7 +31,34 @@
     <script src="lib/Pannellum2_5_6/panorama_player.js" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            window.panoramaPlayer = new PanoramaPlayer('canvas', 'https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/Tailand_2024/Phuket/PIC_20240606_110636.jpg');
+            // Автоматически преобразуем smwrap.ru URLs в GitHub URLs
+            const urlParams = new URLSearchParams(window.location.search);
+            let photoUrl = urlParams.get('photo');
+
+            if (photoUrl && photoUrl.includes('www.smwrap.ru')) {
+                // Преобразуем в GitHub URL
+                const gitHubUrl = photoUrl.replace(
+                    /https?:\/\/www\.smwrap\.ru\/Pano360Git\//,
+                    'https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/'
+                );
+
+                console.log("Converted URL from:", photoUrl);
+                console.log("To GitHub URL:", gitHubUrl);
+
+                // Заменяем параметр в URL
+                urlParams.set('photo', gitHubUrl);
+                const newUrl = window.location.pathname + '?' + urlParams.toString();
+                window.history.replaceState({}, '', newUrl);
+
+                photoUrl = gitHubUrl;
+            }
+
+            // Если не указан photo параметр, используем дефолтный
+            if (!photoUrl) {
+                photoUrl = 'https://raw.githubusercontent.com/MyasnikovIA/Pano360/main/img/Tailand_2024/Phuket/PIC_20240606_110636.jpg';
+            }
+
+            window.panoramaPlayer = new PanoramaPlayer('canvas', photoUrl);
         });
     </script>
 </body>
