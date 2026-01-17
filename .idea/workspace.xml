@@ -27,7 +27,6 @@
   <component name="ChangeListManager">
     <list default="true" id="cb04855e-d89b-4502-98b2-42ba1f3f20c1" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_edit.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_edit.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_player.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_player.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -54,17 +53,17 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="Z:\WebServerLite_jar\www\Pano360Git\example" />
+      <recent name="Z:\WebServerLite_jar\www\Pano360Git\icon" />
+      <recent name="C:\AppServ\www\Pano360Git\img\11.01.2026" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="Z:\WebServerLite_jar\www\Pano360Git" />
       <recent name="C:\AppServ\www\Pano360Git" />
       <recent name="C:\AppServ\www\Pano360Git\img\04.01.2026" />
       <recent name="C:\AppServ\www\Pano360Git\img\11.01.2026(2)" />
       <recent name="C:\AppServ\www\Pano360Git\lib\Pannellum2_5_6" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="Z:\WebServerLite_jar\www\Pano360Git\example" />
-      <recent name="Z:\WebServerLite_jar\www\Pano360Git\icon" />
-      <recent name="C:\AppServ\www\Pano360Git\img\11.01.2026" />
     </key>
   </component>
   <component name="SharedIndexes">
@@ -100,6 +99,7 @@
       <workItem from="1768294652136" duration="9068000" />
       <workItem from="1768347503209" duration="17261000" />
       <workItem from="1768544916813" duration="749000" />
+      <workItem from="1768624944087" duration="220000" />
     </task>
     <servers />
   </component>
