@@ -27,7 +27,8 @@
   <component name="ChangeListManager">
     <list default="true" id="cb04855e-d89b-4502-98b2-42ba1f3f20c1" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_player.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_player.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/edit.html" beforeDir="false" afterPath="$PROJECT_DIR$/edit.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/app/edit.css" beforeDir="false" afterPath="$PROJECT_DIR$/lib/app/edit.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

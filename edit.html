@@ -19,19 +19,35 @@
         <span class="close">&times;</span>
         <h2>Настройка HotSpot</h2>
 
-        <div class="form-group">
-            <label for="hotspotName">Название точки:</label>
-            <input type="text" id="hotspotName" placeholder="Введите название (необязательно)">
+        <!-- Три поля в одной строке -->
+        <div class="form-row">
+            <div class="form-group-full form-group-30">
+                <label for="hotspotName">Название точки:</label>
+                <input type="text" id="hotspotName" placeholder="Введите название (необязательно)">
+            </div>
+            <div class="form-group-full form-group-30">
+                <label for="hotspotType">Тип точки:</label>
+                <select id="hotspotType">
+                    <option value="scene">Переход на сцену</option>
+                    <option value="info">Информационная</option>
+                    <option value="custom">Пользовательская</option>
+                </select>
+            </div>
+            <div class="form-group-full form-group-30">
+                <label for="hotspotText">Текст на точке:</label>
+                <input type="text" id="hotspotText" placeholder="Текст, который будет отображаться">
+            </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group-full">
             <label for="hotspotUrl">URL панорамы для перехода:</label>
-            <div class="url-input-group">
-                <input type="text" id="hotspotUrl" placeholder="Введите URL панорамы">
+            <div class="url-input-group" style="display: flex; gap: 5px;">
+                <input type="text" id="hotspotUrl" placeholder="Введите URL панорамы" style="flex: 1;">
                 <button id="previewClsUrl" class="btn">cls</button>
                 <button id="previewButton" class="btn btn-success">Предпросмотр</button>
             </div>
         </div>
+
         <div style="display: none;">
             <div id="previewContainer" class="preview-container" style="display: none;">
                 <h3>Предпросмотр панорамы</h3>
@@ -41,22 +57,9 @@
                 </div>
             </div>
         </div>
+
         <div id="previewIframeContainer" class="iframe-container">
             <!-- IFRAME с viewer_preview.html будет загружен здесь -->
-        </div>
-
-        <div class="form-group">
-            <label for="hotspotType">Тип точки:</label>
-            <select id="hotspotType">
-                <option value="scene">Переход на сцену</option>
-                <option value="info">Информационная</option>
-                <option value="custom">Пользовательская</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="hotspotText">Текст на точке:</label>
-            <input type="text" id="hotspotText" placeholder="Текст, который будет отображаться">
         </div>
 
         <div id="importSuccess" class="import-success"></div>
