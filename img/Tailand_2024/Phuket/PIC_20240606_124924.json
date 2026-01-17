@@ -1,6 +1,6 @@
 {
-  "pitchCam": -15.225626466229,
-  "yawCam": -151.799379562523,
+  "pitchCam": -7.76056212878,
+  "yawCam": -59.853218753405,
   "hotSpots": [
     {
       "id": 1768369403091,
@@ -25,6 +25,18 @@
       "targetYaw": -168.56281547658,
       "panorama_url": "http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_124930.jpg",
       "createdAt": "2026-01-14T05:44:03.405Z"
+    },
+    {
+      "id": 1768642560153,
+      "name": "Без имени",
+      "type": "scene",
+      "text": "Вечер",
+      "pitch": -5.253174965654,
+      "yaw": -37.081315255966,
+      "targetPitch": -1.479067655718,
+      "targetYaw": 168.847090008121,
+      "panorama_url": "http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_161842.jpg",
+      "createdAt": "2026-01-17T09:36:00.153Z"
     }
   ]
 }
