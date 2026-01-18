@@ -254,8 +254,8 @@
          */
         formatHotSpotsForPannellum(hotspots) {
             return hotspots.map(hotspot => ({
-                pitch: hotspot.pitch,
-                yaw: hotspot.yaw,
+                pitch: hotspot.pitch || 0,
+                yaw: hotspot.yaw || 0,
                 type: hotspot.type || "scene",
                 text: hotspot.text || "Переход",
                 sceneId: "scene1",
@@ -471,6 +471,7 @@
                     click: event.data.clickCoords,
                     view: event.data.viewCoords
                 };
+                console.log("Received preview coordinates:", this.selectedPreviewCoords);
             }
         }
 
@@ -497,22 +498,28 @@
                 };
             }
 
+            // Используем безопасные значения по умолчанию
             const hotspot = {
                 id: Date.now(),
                 name: name || 'Без имени',
                 type: type,
                 text: text || 'Точка перехода',
-                pitch: this.currentCoords.pitch,
-                yaw: this.currentCoords.yaw,
-                targetPitch: this.selectedPreviewCoords ? this.selectedPreviewCoords.view.pitch : 0,
-                targetYaw: this.selectedPreviewCoords ? this.selectedPreviewCoords.view.yaw : 0,
+                pitch: this.currentCoords ? (this.currentCoords.pitch || 0) : 0,
+                yaw: this.currentCoords ? (this.currentCoords.yaw || 0) : 0,
+                targetPitch: this.selectedPreviewCoords ? (this.selectedPreviewCoords.view.pitch || 0) : 0,
+                targetYaw: this.selectedPreviewCoords ? (this.selectedPreviewCoords.view.yaw || 0) : 0,
                 panorama_url: url,
                 createdAt: new Date().toISOString()
             };
 
+            console.log("Saving hotspot:", hotspot);
+
             this.currentHotspots.push(hotspot);
             this.loadHotspotsList();
             this.updateSceneWithHotspots();
+
+            // Закрываем модальное окно после сохранения
+            this.closeModal();
         }
 
         updateSceneWithHotspots() {
@@ -533,8 +540,8 @@
 
             // Преобразуем hotspots в формат Pannellum
             const pannellumHotspots = this.currentHotspots.map(hotspot => ({
-                pitch: hotspot.pitch,
-                yaw: hotspot.yaw,
+                pitch: hotspot.pitch || 0,
+                yaw: hotspot.yaw || 0,
                 type: hotspot.type || "scene",
                 text: hotspot.text || "Переход",
                 sceneId: "scene1",
@@ -562,19 +569,26 @@
             }
 
             this.currentHotspots.forEach((hotspot, index) => {
+                // Безопасное получение значений координат
+                const yaw = hotspot.yaw !== undefined ? hotspot.yaw : 0;
+                const pitch = hotspot.pitch !== undefined ? hotspot.pitch : 0;
+                const targetYaw = hotspot.targetYaw !== undefined ? hotspot.targetYaw : 0;
+                const targetPitch = hotspot.targetPitch !== undefined ? hotspot.targetPitch : 0;
+                const panoramaUrl = hotspot.panorama_url || '';
+
                 const item = document.createElement('div');
                 item.className = 'hotspot-item';
                 item.innerHTML = `
                 <div style="flex-grow: 1;">
-                    <div style="font-weight: bold; margin-bottom: 4px;">${hotspot.name}</div>
+                    <div style="font-weight: bold; margin-bottom: 4px;">${hotspot.name || 'Без имени'}</div>
                     <div style="font-size: 12px; color: #555; margin-bottom: 2px;">
-                        <strong>Координаты:</strong> Yaw ${hotspot.yaw.toFixed(2)}, Pitch ${hotspot.pitch.toFixed(2)}
+                        <strong>Координаты:</strong> Yaw ${yaw.toFixed(2)}, Pitch ${pitch.toFixed(2)}
                     </div>
                     <div style="font-size: 12px; color: #555; margin-bottom: 2px;">
-                        <strong>Направление:</strong> Yaw ${hotspot.targetYaw.toFixed(2)}, Pitch ${hotspot.targetPitch.toFixed(2)}
+                        <strong>Направление:</strong> Yaw ${targetYaw.toFixed(2)}, Pitch ${targetPitch.toFixed(2)}
                     </div>
                     <div style="font-size: 11px; color: #777; margin-top: 4px;">
-                        URL: ${hotspot.panorama_url.substring(0, 40)}${hotspot.panorama_url.length > 40 ? '...' : ''}
+                        URL: ${panoramaUrl.substring(0, 40)}${panoramaUrl.length > 40 ? '...' : ''}
                     </div>
                 </div>
                 <div class="hotspot-actions">
@@ -591,22 +605,22 @@
 
             const hotspot = this.currentHotspots[index];
 
-            document.getElementById('hotspotName').value = hotspot.name;
-            document.getElementById('hotspotUrl').value = hotspot.panorama_url;
-            document.getElementById('hotspotText').value = hotspot.text;
+            document.getElementById('hotspotName').value = hotspot.name || '';
+            document.getElementById('hotspotUrl').value = hotspot.panorama_url || '';
+            document.getElementById('hotspotText').value = hotspot.text || '';
             document.getElementById('hotspotType').value = hotspot.type || 'scene';
 
             this.currentCoords = {
-                pitch: hotspot.pitch,
-                yaw: hotspot.yaw
+                pitch: hotspot.pitch || 0,
+                yaw: hotspot.yaw || 0
             };
 
             // Если есть координаты предпросмотра
             if (hotspot.targetPitch !== undefined && hotspot.targetYaw !== undefined) {
                 this.selectedPreviewCoords = {
                     view: {
-                        pitch: hotspot.targetPitch,
-                        yaw: hotspot.targetYaw
+                        pitch: hotspot.targetPitch || 0,
+                        yaw: hotspot.targetYaw || 0
                     }
                 };
             }
@@ -688,8 +702,8 @@
                     name: hotspot.name || 'Без имени',
                     type: hotspot.type || "scene",
                     text: hotspot.text || "Переход",
-                    pitch: parseFloat(hotspot.pitch.toFixed(12)),
-                    yaw: parseFloat(hotspot.yaw.toFixed(12)),
+                    pitch: parseFloat((hotspot.pitch || 0).toFixed(12)),
+                    yaw: parseFloat((hotspot.yaw || 0).toFixed(12)),
                     targetPitch: parseFloat((hotspot.targetPitch || 0).toFixed(12)),
                     targetYaw: parseFloat((hotspot.targetYaw || 0).toFixed(12)),
                     panorama_url: hotspot.panorama_url,
@@ -744,8 +758,8 @@
                     // Проверяем структуру точек
                     if (hotspotsArray.length > 0) {
                         const firstHotspot = hotspotsArray[0];
-                        if (firstHotspot.pitch === undefined || firstHotspot.yaw === undefined || !firstHotspot.panorama_url) {
-                            throw new Error('Некорректная структура точек в JSON файле');
+                        if (!firstHotspot.panorama_url) {
+                            throw new Error('Некорректная структура точек в JSON файле - отсутствует panorama_url');
                         }
                     }
 
@@ -753,7 +767,7 @@
                     const existingIds = this.currentHotspots.map(h => h.id);
                     const newHotspots = hotspotsArray.filter(h => !existingIds.includes(h.id));
 
-                    // Обрабатываем точки без ID
+                    // Обрабатываем точки без ID и корректируем значения
                     newHotspots.forEach(hotspot => {
                         if (!hotspot.id) {
                             hotspot.id = Date.now() + Math.floor(Math.random() * 1000);
@@ -761,6 +775,11 @@
                         if (!hotspot.createdAt) {
                             hotspot.createdAt = new Date().toISOString();
                         }
+                        // Гарантируем наличие всех полей
+                        hotspot.pitch = hotspot.pitch || 0;
+                        hotspot.yaw = hotspot.yaw || 0;
+                        hotspot.targetPitch = hotspot.targetPitch || 0;
+                        hotspot.targetYaw = hotspot.targetYaw || 0;
                     });
 
                     this.currentHotspots = this.currentHotspots.concat(newHotspots);
@@ -847,14 +866,42 @@
 
                 // Проверяем новый формат
                 if (data && data.hotSpots && Array.isArray(data.hotSpots)) {
+                    // Гарантируем наличие всех полей в точках
+                    data.hotSpots.forEach(hotspot => {
+                        hotspot.pitch = hotspot.pitch || 0;
+                        hotspot.yaw = hotspot.yaw || 0;
+                        hotspot.targetPitch = hotspot.targetPitch || 0;
+                        hotspot.targetYaw = hotspot.targetYaw || 0;
+                    });
                     return data;
                 }
                 // Проверяем старый формат для обратной совместимости
                 else if (Array.isArray(data)) {
+                    // Гарантируем наличие всех полей в точках
+                    data.forEach(hotspot => {
+                        hotspot.pitch = hotspot.pitch || 0;
+                        hotspot.yaw = hotspot.yaw || 0;
+                        hotspot.targetPitch = hotspot.targetPitch || 0;
+                        hotspot.targetYaw = hotspot.targetYaw || 0;
+                    });
                     return { hotSpots: data, pitchCam: 0, yawCam: 0 };
                 } else if (data.hotspots && Array.isArray(data.hotspots)) {
+                    // Гарантируем наличие всех полей в точках
+                    data.hotspots.forEach(hotspot => {
+                        hotspot.pitch = hotspot.pitch || 0;
+                        hotspot.yaw = hotspot.yaw || 0;
+                        hotspot.targetPitch = hotspot.targetPitch || 0;
+                        hotspot.targetYaw = hotspot.targetYaw || 0;
+                    });
                     return { hotSpots: data.hotspots, pitchCam: 0, yawCam: 0 };
                 } else if (data.scenes && data.scenes.scene1 && data.scenes.scene1.hotSpots) {
+                    // Гарантируем наличие всех полей в точках
+                    data.scenes.scene1.hotSpots.forEach(hotspot => {
+                        hotspot.pitch = hotspot.pitch || 0;
+                        hotspot.yaw = hotspot.yaw || 0;
+                        hotspot.targetPitch = hotspot.targetPitch || 0;
+                        hotspot.targetYaw = hotspot.targetYaw || 0;
+                    });
                     return { hotSpots: data.scenes.scene1.hotSpots, pitchCam: 0, yawCam: 0 };
                 }
 
@@ -922,7 +969,9 @@
 
         copyCoords(coords) {
             if (this.isInIframe) return;
-            const text = `Yaw: ${coords.yaw.toFixed(2)}, Pitch: ${coords.pitch.toFixed(2)}`;
+            const yaw = coords.yaw !== undefined ? coords.yaw : 0;
+            const pitch = coords.pitch !== undefined ? coords.pitch : 0;
+            const text = `Yaw: ${yaw.toFixed(2)}, Pitch: ${pitch.toFixed(2)}`;
             navigator.clipboard.writeText(text).then(() => {
                 console.log('Coordinates copied to clipboard:', text);
                 alert('Coordinates copied: ' + text);
@@ -937,7 +986,9 @@
 
         centerView(coords) {
             if (this.sceneMain) {
-                this.sceneMain.lookAt(coords.pitch, coords.yaw, this.sceneMain.getHfov(), 500);
+                const pitch = coords.pitch !== undefined ? coords.pitch : 0;
+                const yaw = coords.yaw !== undefined ? coords.yaw : 0;
+                this.sceneMain.lookAt(pitch, yaw, this.sceneMain.getHfov(), 500);
             }
         }
 
