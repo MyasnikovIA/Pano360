@@ -25,10 +25,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cb04855e-d89b-4502-98b2-42ba1f3f20c1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_edit.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Pannellum2_5_6/panorama_edit.js" afterDir="false" />
-    </list>
+    <list default="true" id="cb04855e-d89b-4502-98b2-42ba1f3f20c1" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -51,6 +48,10 @@
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -129,10 +130,11 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog" timestamp="1768458061823">
-      <screen x="0" y="0" width="1920" height="1040" />
+    <state x="2012" y="92" width="1736" height="856" key="DiffContextDialog" timestamp="1768704692440">
+      <screen x="1920" y="0" width="1920" height="1040" />
     </state>
     <state x="92" y="92" width="1736" height="856" key="DiffContextDialog/0.0.1920.1040/1920.0.1920.1040@0.0.1920.1040" timestamp="1768458061823" />
+    <state x="2012" y="92" width="1736" height="856" key="DiffContextDialog/0.0.1920.1040/1920.0.1920.1040@1920.0.1920.1040" timestamp="1768704692440" />
     <state x="2594" y="249" width="572" height="542" key="find.popup" timestamp="1768666700122">
       <screen x="1920" y="0" width="1920" height="1040" />
     </state>
