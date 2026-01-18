@@ -17,9 +17,23 @@
         <span class="close">&times;</span>
         <h2>Настройка HotSpot</h2>
 
-        <div class="form-group">
-            <label for="hotspotName">Название точки:</label>
-            <input type="text" id="hotspotName" placeholder="Введите название (необязательно)">
+        <div class="form-row">
+            <div class="form-group form-group-30">
+                <label for="hotspotName">Название точки:</label>
+                <input type="text" id="hotspotName" placeholder="Введите название (необязательно)">
+            </div>
+            <div class="form-group form-group-30">
+                <label for="hotspotType">Тип точки:</label>
+                <select id="hotspotType">
+                    <option value="scene">Переход на сцену</option>
+                    <option value="info">Информационная</option>
+                    <option value="custom">Пользовательская</option>
+                </select>
+            </div>
+            <div class="form-group form-group-30">
+                <label for="hotspotText">Текст на точке:</label>
+                <input type="text" id="hotspotText" placeholder="Текст, который будет отображаться">
+            </div>
         </div>
 
         <div class="form-group">
@@ -45,20 +59,6 @@
         <div id="previewContainer" class="preview-container" style="display: none;">
             <h3>Предпросмотр панорамы</h3>
             <p><strong>Инструкция:</strong> Переместите камеру в нужное направление и сделайте <strong>двойной клик</strong> для выбора точки</p>
-        </div>
-
-        <div class="form-group">
-            <label for="hotspotType">Тип точки:</label>
-            <select id="hotspotType">
-                <option value="scene">Переход на сцену</option>
-                <option value="info">Информационная</option>
-                <option value="custom">Пользовательская</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="hotspotText">Текст на точке:</label>
-            <input type="text" id="hotspotText" placeholder="Текст, который будет отображаться">
         </div>
 
         <div id="importSuccess" class="import-success"></div>
@@ -1061,5 +1061,85 @@
         panoramaEditor = new PanoramaEditor();
     });
 </script>
+
+<style>
+    /* Стили для новой структуры */
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+        gap: 10px;
+    }
+
+    .form-group-30 {
+        flex: 1 1 30%;
+        min-width: 200px;
+    }
+
+    .form-group-30 label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .form-group-30 input,
+    .form-group-30 select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    /* Сохраняем существующие стили */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .url-input-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .url-input-group input {
+        flex-grow: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        color: black;
+    }
+</style>
 </body>
 </html>
