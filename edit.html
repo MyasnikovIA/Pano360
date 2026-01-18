@@ -76,6 +76,7 @@
 <script>
     /**
      * Panorama Editor - Main application controller for editing panoramas
+     * Использует механизм загрузки из viewer.html
      */
     class PanoramaEditor {
         constructor() {
@@ -118,268 +119,167 @@
          * Load the initial panorama scene
          */
         loadInitialScene() {
-            this.setSelectPanorama();
+            this.loadPanoramaFromParams();
         }
 
         /**
-         * Set and display panorama based on parameters
-         * @param {Object|null} hotSpot - Hotspot object if triggered from click
+         * Load panorama based on URL parameters - НОВЫЙ МЕТОД на основе viewer.html
          */
-        async setSelectPanorama(hotSpot = null) {
+        async loadPanoramaFromParams() {
             if (this.isLoading) return;
 
             this.isLoading = true;
+
             try {
-                let params = new URLSearchParams(document.location.search);
-                let infoValue = params.get('info');
+                const params = new URLSearchParams(window.location.search);
                 let photoValue = params.get('photo');
                 let hotSpotsValue = params.get('hotSpots');
+                let infoValue = params.get('info');
 
                 // Нормализация путей
                 if (photoValue) {
                     photoValue = this.normalizePath(photoValue);
                 }
-                if (hotSpotsValue) {
-                    hotSpotsValue = this.normalizePath(hotSpotsValue);
-                }
 
                 // Настройка canvas
-                let canvas = document.getElementById('canvas');
+                const canvas = document.getElementById('canvas');
                 canvas.style.width = '100%';
                 canvas.style.height = '100%';
 
-                // Базовый JSON конфиг
-                let jsonObj = this.createBaseJsonConfig();
+                // Определяем URL для загрузки
+                let panoramaUrl = '';
+                let hotspotsArray = [];
+                let cameraDirection = {};
 
-                // Загрузка в зависимости от параметров
                 if (photoValue) {
-                    await this.loadPhotoPanorama(photoValue, hotSpot, hotSpotsValue, jsonObj);
+                    // Загрузка фото панорамы
+                    panoramaUrl = photoValue;
+
+                    // Пробуем загрузить JSON с хотспотами
+                    try {
+                        const jsonUrl = this.getJsonUrlFromImageUrl(panoramaUrl);
+                        const jsonData = await this.loadHotSpotsFromJson(jsonUrl);
+
+                        hotspotsArray = jsonData.hotSpots || [];
+
+                        if (jsonData.pitchCam !== undefined && jsonData.yawCam !== undefined) {
+                            cameraDirection = {
+                                pitchCam: jsonData.pitchCam,
+                                yawCam: jsonData.yawCam
+                            };
+                            console.log("Loaded camera direction from JSON:", cameraDirection);
+                        }
+
+                        console.log("Loaded hotspots from JSON:", hotspotsArray.length);
+                    } catch (error) {
+                        console.log("No JSON file found or error loading:", error);
+                    }
+
+                    // Если есть hotspots в URL параметре, парсим их
+                    if (hotSpotsValue) {
+                        try {
+                            const urlHotspots = JSON.parse(decodeURIComponent(hotSpotsValue));
+                            if (Array.isArray(urlHotspots)) {
+                                hotspotsArray = hotspotsArray.concat(urlHotspots);
+                            }
+                        } catch (e) {
+                            console.error("Error parsing hotSpots URL parameter:", e);
+                        }
+                    }
                 } else if (infoValue) {
-                    this.loadInfoPanorama(infoValue, hotSpot, jsonObj);
+                    // Легаси режим
+                    panoramaUrl = '/Example/pano360/point_info/' + infoValue;
                 } else {
-                    await this.loadDefaultPanorama(jsonObj);
+                    // Режим по умолчанию
+                    panoramaUrl = 'img/04.01.2026/DSCN0021.JPG';
                 }
+
+                // Создаем конфигурацию для Pannellum
+                const config = this.createPannellumConfig(panoramaUrl, hotspotsArray, cameraDirection);
+
+                // Создаем или обновляем viewer
+                this.createPannellumViewer(config);
+
+                // Обновляем список hotspots в интерфейсе
+                setTimeout(() => {
+                    this.loadHotspotsList();
+                }, 500);
+
+            } catch (error) {
+                console.error("Error loading panorama:", error);
+                this.showError("Ошибка загрузки панорамы: " + error.message);
             } finally {
                 this.isLoading = false;
             }
         }
 
         /**
-         * Create base JSON configuration for Pannellum
-         * @returns {Object} Base configuration object
+         * Create Pannellum configuration based on parameters
          */
-        createBaseJsonConfig() {
-            return {
+        createPannellumConfig(panoramaUrl, hotspotsArray, cameraDirection) {
+            const isExternal = this.isExternalUrl(panoramaUrl);
+
+            const config = {
                 hotSpotDebug: false,
                 hotPointDebug: !this.isInIframe,
                 sceneFadeDuration: this.isInIframe ? 500 : 1000,
                 default: {
-                    firstScene: "scene1"
+                    firstScene: "scene1",
+                    autoLoad: true
                 },
                 scenes: {
                     scene1: {
-                        title: "",
-                        crossOrigin: "use-credentials",
+                        title: "Панорама",
+                        panorama: panoramaUrl,
+                        crossOrigin: isExternal ? undefined : "use-credentials",
                         autoLoad: true,
-                        yaw: 0,
-                        pitch: 0,
-                        hotSpots: []
+                        yaw: cameraDirection.yawCam || 0,
+                        pitch: cameraDirection.pitchCam || 0,
+                        hotSpots: this.formatHotSpotsForPannellum(hotspotsArray)
                     }
                 }
             };
+
+            // Добавляем обработчики событий
+            this.addEventHandlersToConfig(config);
+
+            // Сохраняем hotspots для редактора
+            this.currentHotspots = hotspotsArray;
+
+            return config;
         }
 
         /**
-         * Load panorama from photo parameter
+         * Format hotspots for Pannellum
          */
-        async loadPhotoPanorama(photoValue, hotSpot, hotSpotsValue, jsonConfig) {
-            const imageUrl = photoValue;
-            const isExternal = this.isExternalUrl(photoValue);
-            const jsonUrl = this.getJsonUrlFromImageUrl(photoValue);
-            let cameraDirection = {};
-
-            try {
-                // Пробуем загрузить JSON с хотспотами
-                const jsonData = await this.loadHotSpotsFromJson(jsonUrl);
-                const hotspotsFromJson = jsonData.hotSpots || [];
-
-                if (jsonData.pitchCam !== undefined && jsonData.yawCam !== undefined) {
-                    cameraDirection = {
-                        pitchCam: jsonData.pitchCam,
-                        yawCam: jsonData.yawCam
-                    };
-                    console.log("Loaded camera direction from JSON:", cameraDirection);
-                }
-
-                console.log("Loaded hotspots from JSON:", hotspotsFromJson.length);
-
-                // Финализируем сцену
-                await this.finalizeScene(imageUrl, isExternal, hotspotsFromJson, cameraDirection, hotSpot, hotSpotsValue, jsonConfig);
-            } catch(error) {
-                console.log("No JSON file found or error loading:", jsonUrl, error);
-                // Загружаем сцену без данных из JSON
-                await this.finalizeScene(imageUrl, isExternal, [], {}, hotSpot, hotSpotsValue, jsonConfig);
-            }
+        formatHotSpotsForPannellum(hotspots) {
+            return hotspots.map(hotspot => ({
+                pitch: hotspot.pitch,
+                yaw: hotspot.yaw,
+                type: hotspot.type || "scene",
+                text: hotspot.text || "Переход",
+                sceneId: "scene1",
+                panorama_url: hotspot.panorama_url,
+                point_pitch: hotspot.targetPitch || 0,
+                point_yaw: hotspot.targetYaw || 0,
+                customScale: hotspot.customScale || undefined
+            }));
         }
 
         /**
-         * Load panorama from info parameter (legacy format)
+         * Create Pannellum viewer instance
          */
-        loadInfoPanorama(infoValue, hotSpot, jsonConfig) {
-            const oldJsonData = this.getJsonUrlData('/Example/pano360/point_info/' + infoValue);
-            Object.assign(jsonConfig, oldJsonData);
-
-            // Apply hotspot camera direction if available
-            if (hotSpot) {
-                if (hotSpot.point_pitch !== undefined && jsonConfig.scenes?.scene1) {
-                    jsonConfig.scenes.scene1.pitch = hotSpot.point_pitch;
-                }
-                if (hotSpot.point_yaw !== undefined && jsonConfig.scenes?.scene1) {
-                    jsonConfig.scenes.scene1.yaw = hotSpot.point_yaw;
-                }
+        createPannellumViewer(config) {
+            // Clean up previous viewer
+            if (this.sceneMain && typeof this.sceneMain.destroy === 'function') {
+                this.sceneMain.destroy();
             }
 
-            // Add event handlers
-            this.addEventHandlersToConfig(jsonConfig);
+            this.sceneMain = pannellum.viewer('canvas', config);
 
-            this.createPannellumViewer(jsonConfig, infoValue);
-        }
-
-        /**
-         * Load default panorama when no parameters are provided
-         */
-        async loadDefaultPanorama(jsonConfig) {
-            const defaultImage = 'img/04.01.2026/DSCN0021.JPG';
-            const jsonUrl = this.getJsonUrlFromImageUrl(defaultImage);
-
-            try {
-                const jsonData = await this.loadHotSpotsFromJson(jsonUrl);
-                const hotspotsFromJson = jsonData.hotSpots || [];
-                let cameraDirection = {};
-
-                if (jsonData.pitchCam !== undefined && jsonData.yawCam !== undefined) {
-                    cameraDirection = {
-                        pitchCam: jsonData.pitchCam,
-                        yawCam: jsonData.yawCam
-                    };
-                    console.log("Loaded camera direction from JSON for default image:", cameraDirection);
-                    jsonConfig.scenes.scene1.pitch = cameraDirection.pitchCam;
-                    jsonConfig.scenes.scene1.yaw = cameraDirection.yawCam;
-                }
-
-                console.log("Loaded hotspots from JSON for default image:", hotspotsFromJson.length);
-
-                // Configure default scene
-                const scene = jsonConfig.scenes.scene1;
-                scene.title = "Default Panorama";
-                scene.panorama = defaultImage;
-
-                // Преобразуем hotspots в формат Pannellum
-                scene.hotSpots = this.formatHotSpots(hotspotsFromJson);
-
-                // Сохраняем текущие hotspots для редактора
-                this.currentHotspots = hotspotsFromJson;
-
-                // Устанавливаем направление камеры по умолчанию, если не загружено из JSON
-                if (jsonData.pitchCam === undefined) {
-                    scene.pitch = -24.41;
-                }
-                if (jsonData.yawCam === undefined) {
-                    scene.yaw = -6.77;
-                }
-
-                this.createPannellumViewer(jsonConfig, 'default');
-
-            } catch (error) {
-                console.log("No JSON file found for default image:", jsonUrl, error);
-
-                // Fallback configuration
-                const scene = jsonConfig.scenes.scene1;
-                scene.title = "Default Panorama";
-                scene.panorama = defaultImage;
-                scene.yaw = -6.77;
-                scene.pitch = -24.41;
-
-                this.createPannellumViewer(jsonConfig, 'default');
-
-                // Обновляем список hotspots (пустой)
-                setTimeout(() => {
-                    this.currentHotspots = [];
-                    this.loadHotspotsList();
-                }, 500);
-            }
-        }
-
-        /**
-         * Finalize and display the panorama scene
-         */
-        async finalizeScene(imageUrl, isExternal, hotspotsData, cameraDirection, hotSpot, hotSpotsValue, jsonConfig) {
-            const scene = jsonConfig.scenes.scene1;
-            scene.panorama = imageUrl;
-            scene.crossOrigin = isExternal ? undefined : "use-credentials";
-
-            // Устанавливаем направление камеры из hotSpot или из JSON
-            if (hotSpot && hotSpot.point_pitch !== undefined) {
-                scene.pitch = hotSpot.point_pitch;
-            } else if (cameraDirection && cameraDirection.pitchCam !== undefined) {
-                scene.pitch = cameraDirection.pitchCam;
-            }
-
-            if (hotSpot && hotSpot.point_yaw !== undefined) {
-                scene.yaw = hotSpot.point_yaw;
-            } else if (cameraDirection && cameraDirection.yawCam !== undefined) {
-                scene.yaw = cameraDirection.yawCam;
-            }
-
-            // Если есть hotspots в URL параметре, парсим их
-            let hotspotsArray = [];
-            if (hotSpotsValue) {
-                try {
-                    hotspotsArray = JSON.parse(decodeURIComponent(hotSpotsValue));
-                } catch (e) {
-                    console.error("Error parsing hotSpots URL parameter:", e);
-                }
-            }
-
-            // Объединяем hotspots из JSON и URL параметра
-            let allHotSpots = [];
-            if (Array.isArray(hotspotsData)) {
-                allHotSpots = allHotSpots.concat(hotspotsData);
-            }
-            if (Array.isArray(hotspotsArray)) {
-                allHotSpots = allHotSpots.concat(hotspotsArray);
-            }
-
-            // Убираем дубликаты по pitch/yaw
-            let uniqueHotspots = this.removeDuplicateHotspots(allHotSpots);
-
-            // Преобразуем hotspots в формат Pannellum
-            scene.hotSpots = this.formatHotSpots(uniqueHotspots);
-
-            // Сохраняем текущие hotspots для редактора
-            this.currentHotspots = uniqueHotspots;
-
-            // Add event handlers
-            this.addEventHandlersToConfig(jsonConfig);
-
-            this.createPannellumViewer(jsonConfig, imageUrl);
-
-            // Если есть направление камеры из JSON, устанавливаем его с задержкой
-            if (cameraDirection && (cameraDirection.pitchCam !== undefined || cameraDirection.yawCam !== undefined)) {
-                setTimeout(() => {
-                    if (this.sceneMain) {
-                        const targetPitch = cameraDirection.pitchCam || scene.pitch;
-                        const targetYaw = cameraDirection.yawCam || scene.yaw;
-                        this.sceneMain.lookAt(targetPitch, targetYaw, this.sceneMain.getHfov(), 1000);
-                        console.log("Camera direction set from JSON: Pitch=" + targetPitch + ", Yaw=" + targetYaw);
-                    }
-                }, 1000);
-            }
-
-            // Обновляем список hotspots в интерфейсе
-            setTimeout(() => {
-                this.loadHotspotsList();
-            }, 500);
+            // Сохраняем имя текущей сцены
+            const params = new URLSearchParams(window.location.search);
+            this.currentScene = params.get('photo') || params.get('info') || 'default';
         }
 
         /**
@@ -399,57 +299,8 @@
         }
 
         /**
-         * Format hotspot data for Pannellum
-         */
-        formatHotSpots(hotspots) {
-            return hotspots.map(hotspot => ({
-                pitch: hotspot.pitch,
-                yaw: hotspot.yaw,
-                type: hotspot.type || "scene",
-                text: hotspot.text || "Переход",
-                sceneId: "scene1",
-                panorama_url: hotspot.panorama_url,
-                point_pitch: hotspot.targetPitch || 0,
-                point_yaw: hotspot.targetYaw || 0,
-                customScale: hotspot.customScale || undefined
-            }));
-        }
-
-        /**
-         * Remove duplicate hotspots
-         */
-        removeDuplicateHotspots(hotspots) {
-            const uniqueHotspots = [];
-            const seen = {};
-
-            hotspots.forEach(item => {
-                const key = item.pitch + '|' + item.yaw + '|' + (item.panorama_url || '');
-                if (!seen[key]) {
-                    seen[key] = true;
-                    uniqueHotspots.push(item);
-                }
-            });
-
-            return uniqueHotspots;
-        }
-
-        /**
-         * Create Pannellum viewer instance
-         */
-        createPannellumViewer(config, sceneName) {
-            // Clean up previous viewer
-            if (this.sceneMain && typeof this.sceneMain.destroy === 'function') {
-                this.sceneMain.destroy();
-            }
-
-            this.sceneMain = pannellum.viewer('canvas', config);
-            this.currentScene = sceneName;
-        }
-
-        /**
          * Event handlers
          */
-
         onDblClick(coords, screenCoords, event) {
             if (this.isInIframe) return;
 
@@ -478,37 +329,17 @@
             if (hs.panorama_url) {
                 let currentUrl = new URL(window.location.href);
                 currentUrl.searchParams.set('photo', hs.panorama_url);
-                window.history.pushState({}, '', currentUrl);
-                hs.pitch = hs.point_pitch;
-                hs.yaw = hs.point_yaw;
-                this.setSelectPanorama(hs);
-                return true;
-            }
 
-            // Старая логика для JSON конфигураций
-            const jsonName = hs.panorama_url?.split('/')[4];
-            if (jsonName) {
-                const name = jsonName.split('.')[0];
-                let currentUrl = new URL(window.location.href);
-                if (!currentUrl.searchParams.get('info')) {
-                    currentUrl.searchParams.append('info', hs.panorama_url.split('/')[4]);
-                } else {
-                    currentUrl.searchParams.set('info', hs.panorama_url.split('/')[4]);
+                // Сохраняем направление камеры
+                if (hs.point_pitch !== undefined) {
+                    hs.pitch = hs.point_pitch;
+                }
+                if (hs.point_yaw !== undefined) {
+                    hs.yaw = hs.point_yaw;
                 }
 
                 window.history.pushState({}, '', currentUrl);
-                let jsonObj = this.getJsonUrlData(hs.panorama_url);
-                jsonObj.onClickHotSpot = (hs) => this.onClickHotSpot(hs);
-
-                jsonObj.pitch = hs.point_pitch;
-                jsonObj.yaw = hs.point_yaw;
-
-                if (this.sceneMain && typeof this.sceneMain.destroy !== 'undefined') {
-                    this.sceneMain.destroy();
-                }
-
-                this.sceneMain = pannellum.viewer('canvas', jsonObj);
-                this.currentScene = name;
+                this.loadPanoramaFromParams();
                 return true;
             }
 
@@ -557,7 +388,6 @@
         /**
          * Hotspot management
          */
-
         openHotSpotModal(coords) {
             if (this.isInIframe) return;
 
@@ -981,7 +811,6 @@
         /**
          * Utility methods
          */
-
         normalizePath(path) {
             return path ? path.replace(/\\/g, '/') : path;
         }
@@ -1035,19 +864,6 @@
                 console.log("Error loading JSON hotspots from:", jsonUrl, error);
                 throw error;
             }
-        }
-
-        getJsonUrlData(url, data) {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', url, false);
-            xhr.send(data);
-
-            if (xhr.status !== 200) {
-                console.error(`${xhr.status}: ${xhr.statusText} (${url})`);
-                return { error: `${xhr.status} : ${xhr.statusText}` };
-            }
-
-            return JSON.parse(xhr.response);
         }
 
         showCustomContextMenu(x, y, data) {
@@ -1116,7 +932,7 @@
         addHotSpotAt(coords) {
             if (this.isInIframe) return;
             console.log('Add HotSpot at:', coords);
-            alert('Add HotSpot at: Yaw=' + coords.yaw.toFixed(2) + ', Pitch=' + coords.pitch.toFixed(2));
+            this.openHotSpotModal(coords);
         }
 
         centerView(coords) {
@@ -1139,6 +955,11 @@
             setTimeout(() => {
                 URL.revokeObjectURL(url);
             }, 1000);
+        }
+
+        showError(message) {
+            console.error(message);
+            // Можно добавить отображение ошибки в интерфейсе
         }
 
         initModalHandlers() {
@@ -1183,7 +1004,7 @@
                                 currentUrl.searchParams.set('hotSpots', encodeURIComponent(JSON.stringify(event.data.hotSpots)));
                             }
                             window.history.pushState({}, '', currentUrl);
-                            this.setSelectPanorama(event.data.hotSpot || null);
+                            this.loadPanoramaFromParams();
                         }
                         break;
                     case 'getState':
@@ -1242,4 +1063,3 @@
 </script>
 </body>
 </html>
-
