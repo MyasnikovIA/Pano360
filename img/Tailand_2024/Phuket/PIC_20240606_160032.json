@@ -11,7 +11,7 @@
       "yaw": 29.789722920425,
       "targetPitch": -7.81153981785,
       "targetYaw": 141.953019915455,
-      "panorama_url": "http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_160039.jpg",
+      "panorama_url": "http://www.smwrap.ru:9092/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_160039.jpg",
       "createdAt": "2026-01-14T15:32:43.999Z"
     }
   ]

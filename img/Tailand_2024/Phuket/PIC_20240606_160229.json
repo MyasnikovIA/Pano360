@@ -11,7 +11,7 @@
       "yaw": 160.588756332609,
       "targetPitch": -13.887404940355,
       "targetYaw": 166.840341679885,
-      "panorama_url": "http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_160239.jpg",
+      "panorama_url": "http://www.smwrap.ru:9092/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_160239.jpg",
       "createdAt": "2026-01-14T11:58:15.629Z"
     },
     {
@@ -23,7 +23,7 @@
       "yaw": -16.641859511691,
       "targetPitch": 3.371710096151,
       "targetYaw": -49.135690718272,
-      "panorama_url": "http://www.smwrap.ru/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_160219.jpg",
+      "panorama_url": "http://www.smwrap.ru:9092/Pano360Git/img/Tailand_2024/Phuket/PIC_20240606_160219.jpg",
       "createdAt": "2026-01-14T11:59:05.534Z"
     }
   ]
